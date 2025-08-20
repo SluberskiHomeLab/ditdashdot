@@ -6,8 +6,8 @@ const App = () => {
   const [groups, setGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
-  const [showDetails, setShowDetails] = useState(true);
   const [mode, setMode] = useState("light_mode"); // default mode
+  const [showDetails, setShowDetails] = useState(true); // default
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -17,7 +17,8 @@ const App = () => {
         const data = yaml.load(text);
         if (data.title) setDashboardTitle(data.title);
         if (data.groups) setGroups(data.groups);
-        if (data.mode) setMode(data.mode); // get mode from config
+        if (data.mode) setMode(data.mode);
+        if (typeof data.show_details === "boolean") setShowDetails(data.show_details);
       } catch (err) {
         console.error("Failed to load config.yml:", err);
       }
@@ -44,26 +45,9 @@ const App = () => {
     );
 
   return (
-    <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles }}>
+    <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles, position: 'relative' }}>
       <div style={{ backgroundColor: 'transparent', padding: '10px', textAlign: 'center' }}>
         <h1 style={{ margin: 0 }}>{dashboardTitle}</h1>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          style={{
-            marginLeft: '10px',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            border: 'none',
-            background: '#eee',
-            cursor: 'pointer',
-            minWidth: '40px',
-            minHeight: '40px',
-            fontWeight: 'bold',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-          }}
-        >
-          {showDetails ? 'Hide Details' : 'Show Details'}
-        </button>
       </div>
       <div style={{ textAlign: 'center', margin: '5px 0' }}>
         <input
@@ -88,6 +72,19 @@ const App = () => {
           </div>
         );
       })}
+      <div
+        style={{
+          position: 'fixed',
+          left: '10px',
+          bottom: '10px',
+          fontSize: '0.8em',
+          color: '#bbb',
+          zIndex: 1000,
+          pointerEvents: 'none'
+        }}
+      >
+        Created by SluberskiHomelab on GitHub
+      </div>
     </div>
   );
 };

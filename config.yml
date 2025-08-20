@@ -1,5 +1,6 @@
 title: Homelab Dashboard
 mode: dark_mode # options: dark_mode, light_mode, trans_light, trans_dark
+show_details: true # or false
 groups:
   - title: Home Automation
     services:
@@ -7,14 +8,12 @@ groups:
         ip: 192.168.1.10
         name: Home Assistant
         port: 8123
-        status: online
         url: http://192.168.1.10:8123
 
       - iconUrl: https://pi-hole.net/wp-content/uploads/2016/12/cropped-Vortex-R-192x192.png
         ip: 192.168.1.11
         name: Pi-hole
         port: 80
-        status: offline
         url: http://192.168.1.11
 
   - title: Management
@@ -23,12 +22,10 @@ groups:
         ip: 192.168.1.12
         name: Portainer
         port: 9000
-        status: online
         url: http://192.168.1.12:9000
 
       - iconUrl: https://syncthing.net/images/logo-128.png
         ip: 192.168.1.13
         name: Syncthing
         port: 8384
-        status: online
         url: http://192.168.1.13:8384

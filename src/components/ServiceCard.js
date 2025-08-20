@@ -53,12 +53,6 @@ const ServiceCard = ({ service, showDetails = true, mode = "light_mode" }) => {
           <div>
             <strong>Port:</strong> {service.port}
           </div>
-          <div>
-            <strong>Status:</strong>{' '}
-            <span style={{ color: service.statusColor || (service.status === 'online' ? '#00cc00' : '#cc0000') }}>
-              {service.status}
-            </span>
-          </div>
         </div>
       )}
     </button>
