@@ -21,38 +21,6 @@
 - [Docker](https://www.docker.com/) installed on your host machine
 - [Docker Compose](https://docs.docker.com/compose/) (optional, for Compose setup)
 
-### Quick Start (Docker)
-
-Run the below command to spin up DitDashDot in docker.
-```bash
-docker run -d \
-  -p 80:80 \
-  -v "$(pwd)/config.yml:/usr/share/nginx/html/config.yml" \
-  -v "$(pwd)/background.jpg:/usr/share/nginx/html/background.jpg" \
-  --name ditdashdot \
-  sluberskihomelab/ditdashdot:latest
-```
-
-To edit your config.yml and background.jpg files, 
-Exec into the docker container
-```bash
-docker exec doashboard bash
-```
-Navigate to /usr/share/nginx/html \
-You will find the config files there.
-#### Custom directory ***Reccomended***
-If you want to list a custom directory for your config.yml or background.jpg files for whatever reason, you can do so with the docker run below.
-```bash
-docker run -d \
-  -p 80:80 \
-  -v "/path/to/your/config.yml:/usr/share/nginx/html/config.yml" \
-  -v "/path/to/ypur/background.jpg:/usr/share/nginx/html/background.jpg" \
-  --name ditdashdot \
-  sluberskihomelab/ditdashdot:latest
-```
-
-3. Open your browser and navigate to `http://localhost:80` to view your dashboard.
-
 ### Quick Start (Docker Compose)
 
 1. Clone the repository:
