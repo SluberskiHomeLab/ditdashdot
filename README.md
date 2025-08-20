@@ -34,13 +34,13 @@ docker run -d \
 ```
 
 To edit your config.yml and background.jpg files, 
-exec into the docker container
+Exec into the docker container
 ```bash
 docker exec doashboard bash
 ```
 Navigate to /usr/share/nginx/html \
 You will find the config files there.
-#### Custom directory
+#### Custom directory ***Reccomended***
 If you want to list a custom directory for your config.yml or background.jpg files for whatever reason, you can do so with the docker run below.
 ```bash
 docker run -d \
