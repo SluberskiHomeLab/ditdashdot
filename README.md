@@ -11,7 +11,7 @@
 - Runs in Docker for easy deployment and management
 - Clean design focused on usability
 - Easily configurable to fit your homelab setup
-- Yaml file uploads vs pointing to a directory
+- Simple yaml configuration
 
 ## Getting Started
 
@@ -54,7 +54,7 @@
 
 ## Configuration
 
-Configuration is designed to be straightforward. Additional documentation can be found below.
+Configuration is designed to be straightforward. Additional documentation can be found HERE.
 
 ## Technologies Used
 
