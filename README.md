@@ -9,6 +9,7 @@
 - Runs in Docker for easy deployment and management
 - Clean design focused on usability
 - Easily configurable to fit your homelab setup
+- Yaml file uploads vs pointing to a directory
 
 ## Getting Started
 
@@ -28,10 +29,10 @@
 2. Build and run the container:
    ```bash
    docker build -t ditdashdot .
-   docker run -d -p 3000:3000 ditdashdot
+   docker run -d -p 80:80 ditdashdot
    ```
 
-3. Open your browser and navigate to `http://localhost:3000` to view your dashboard.
+3. Open your browser and navigate to `http://localhost:80` to view your dashboard.
 
 ### Quick Start (Docker Compose)
 
@@ -41,29 +42,17 @@
    cd ditdashdot
    ```
 
-2. Create a `docker-compose.yml` file with the following content:
-
-   ```yaml
-   version: '3'
-   services:
-     ditdashdot:
-       build: .
-       ports:
-         - "3000:3000"
-       restart: unless-stopped
-   ```
-
-3. Start the services:
+2. Start the services:
 
    ```bash
-   docker-compose up -d
+   docker-compose up --build -d
    ```
 
-4. Open your browser and navigate to `http://localhost:3000` to view your dashboard.
+3. Open your browser and navigate to `http://localhost:80` to view your dashboard.
 
 ## Configuration
 
-Configuration is designed to be straightforward. Please refer to the documentation or example configuration files to set up your services.
+Configuration is designed to be straightforward. Additional documentation can be found below.
 
 ## Technologies Used
 
