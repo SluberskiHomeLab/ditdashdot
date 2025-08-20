@@ -45,9 +45,8 @@ const App = () => {
 
   return (
     <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles }}>
-      <div style={{ backgroundColor: '#ccc', padding: '10px', textAlign: 'center', display: 'none' }}>
+      <div style={{ backgroundColor: 'transparent', padding: '10px', textAlign: 'center' }}>
         <h1 style={{ margin: 0 }}>{dashboardTitle}</h1>
-        {/* Dark mode button removed */}
         <button
           onClick={() => setShowDetails(!showDetails)}
           style={{
