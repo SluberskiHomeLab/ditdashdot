@@ -1,4 +1,5 @@
 title: Homelab Dashboard
+mode: dark_mode # options: dark_mode, light_mode, trans_light, trans_dark
 groups:
   - title: Home Automation
     services:
