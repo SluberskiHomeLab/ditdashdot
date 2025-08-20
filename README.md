@@ -1,9 +1,8 @@
-# ditdashdot
+# DitDashDot
 
-**ditdashdot** is a simple, clean, and easy-to-configure services dashboard designed specifically for homelabs. Built with React.js and containerized with Docker, it provides a central hub to view and manage your homelab services.
+**DitDashDot** is a simple, clean, and easy-to-configure services dashboard designed specifically for homelabs. Built with React.js and containerized with Docker, it provides a central hub to view and manage your homelab services.
 
-***THIS IS A WORK IN PROGRESS AND IS FAR FROM COMPLETE! THIS IS IN DEVELOPMENT SO USE AT YOUR OWN RISK***
-***THERE IS NO REGISTRY ENTRY AS OF YET.  ONCE RELASE 1.0 IS OUT, I WILL CREATE A REGISTRY ENTRY***
+***This is a work in progress.  I am not a developer, this is a passion project***
 ## Features
 
 - Simple and intuitive dashboard interface
@@ -24,17 +23,25 @@
 
 ### Quick Start (Docker)
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/SluberskiHomeLab/ditdashdot.git
-   cd ditdashdot
-   ```
-
-2. Build and run the container:
-   ```bash
-   docker build -t ditdashdot .
-   docker run -d -p 80:80 ditdashdot
-   ```
+Run the below command to spin up DitDashDot in docker.
+```bash
+docker run -d \
+  -p 80:80 \
+  -v "$(pwd)/config.yml:/usr/share/nginx/html/config.yml" \
+  -v "$(pwd)/background.jpg:/usr/share/nginx/html/background.jpg" \
+  --name dashboard \
+  sluberskihomelab/ditdashdot:latest
+```
+#### Custom directory
+If you want to list a custom directory for your config.yml or background.jpg files for whatever reason, you can do so with the docker run below.
+```bash
+docker run -d \
+  -p 80:80 \
+  -v "/path/to/your/config.yml:/usr/share/nginx/html/config.yml" \
+  -v "/path/to/ypur/background.jpg:/usr/share/nginx/html/background.jpg" \
+  --name dashboard \
+  sluberskihomelab/ditdashdot:latest
+```
 
 3. Open your browser and navigate to `http://localhost:80` to view your dashboard.
 
@@ -46,29 +53,95 @@
    cd ditdashdot
    ```
 
-2. Start the services:
+   Or create a docker-compose.yml file in your preferred directory using the below code.
+   ```yml
+   services:
+     dashboard:
+       image: sluberskihomelab/ditdashdot:latest
+       ports:
+         - "80:80"
+       volumes:
+         - ./config.yml:/usr/share/nginx/html/config.yml
+         - ./background.jpg:/usr/share/nginx/html/background.jpg
+       restart: always
+   ```
+   
+2. Start the service:
 
    ```bash
-   docker-compose up --build -d
+   docker-compose up -d
    ```
 
-3. Open your browser and navigate to `http://localhost:80` to view your dashboard.
+4. Open your browser and navigate to `http://localhost:80` to view your dashboard.
 
 ## Configuration
 
 Configuration is designed to be straightforward. 
 
-### config.yml
+#### config.yml
 
 Config.yml is the primary configuration file for the dashboard.  This is where the services configuration is layed out.  I have included a sample config.yml file in this repo.  Place this config in the root of the project folder.  
 
-### background.png
+There are a few things that you can customize in the config.yml to make your dashboard exactly how you want it.  
 
-If you wish to use a different image for the background of your dashboard, replace the background.png file with your own.  I will add upload support for this later within the dashboard.  
+##### Title
+Change this variable to set the title of your page
+```yml
+title: Homelab Dashboard
+```
+*If you want to set the tab title, you can change that in index.html on the <title> section
+```html
+<title>Homelab Dashboard</title>
+```
 
-### Additional notes
+##### Theme
+DitDashDot has 4 themes to choose from. This should give you a bit of freedom with color combos and readability.
 
-- In order for you to have service status on the dashboard, you will need to input 10 and port.  It will not work without this.  I have this configured so you can have reverse proxied addresses inputted for the URL but the ping will be to the direct service ip.
+```yml
+mode: dark_mode #Cards are dark grey, Text is white
+```
+```yml
+mode: light_mode #Cards are white, Text is black
+```
+```yml
+mode: trans_light #Cards are transparent, Text is black
+```
+```yml
+mode: trans_dark #Cards are transparent, Text is white
+```
+
+##### Show Details
+Show Details will either show or hide information like ip address and port on the card.
+
+```yml
+show_details: true #This will show ip address and port on the card
+```
+```yml
+show_details: false #This will hide the ip address and port on the card
+```
+
+##### Groups
+Groups are Separate sections intended to improve organization.  Each group that is listed is horizontal and has a centered title
+
+Example of a service within a group with a title:
+```yml
+groups: # each group will be a separate vertical section in the dashboard
+  - title: Home Automation
+    services:
+      - iconUrl: https://www.home-assistant.io/images/favicon.ico
+        ip: 192.168.1.10
+        name: Home Assistant
+        port: 8123
+        url: http://192.168.1.10:8123
+```
+
+#### Background Image
+
+If you wish to use a different image for the background of your dashboard, replace the background.jpg file with your own. This must be a jpg image at the moment since the code specifically looks for the .jpg file extension.
+
+#### Additional notes
+
+- There are updates coming for the project.  I will track them here in GitHub.
 
 ## Technologies Used
 
@@ -79,7 +152,7 @@ If you wish to use a different image for the background of your dashboard, repla
 
 ## Contributing
 
-Contributions are welcome! Feel free to submit issues or pull requests to improve the project.
+Contributions are welcome! Feel free to submit issues to give me suggestions on how to improve the project. 
 
 ## License
 
