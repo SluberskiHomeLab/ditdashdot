@@ -3,4 +3,6 @@ services:
     build: .
     ports:
       - "80:80"
+    volumes:
+      - ./config.yml:/usr/share/nginx/html/config.yml
     restart: always
