@@ -29,7 +29,7 @@ docker run -d \
   -p 80:80 \
   -v "$(pwd)/config.yml:/usr/share/nginx/html/config.yml" \
   -v "$(pwd)/background.jpg:/usr/share/nginx/html/background.jpg" \
-  --name dashboard \
+  --name ditdashdot \
   sluberskihomelab/ditdashdot:latest
 ```
 
@@ -47,7 +47,7 @@ docker run -d \
   -p 80:80 \
   -v "/path/to/your/config.yml:/usr/share/nginx/html/config.yml" \
   -v "/path/to/ypur/background.jpg:/usr/share/nginx/html/background.jpg" \
-  --name dashboard \
+  --name ditdashdot \
   sluberskihomelab/ditdashdot:latest
 ```
 
@@ -69,8 +69,8 @@ docker run -d \
        ports:
          - "80:80"
        volumes:
-         - ./config.yml:/usr/share/nginx/html/config.yml
-         - ./background.jpg:/usr/share/nginx/html/background.jpg
+         - /path/to/your/config.yml:/usr/share/nginx/html/config.yml
+         - /path/to/ypur/background.jpg:/usr/share/nginx/html/background.jpg
        restart: always
    ```
    
