@@ -1,6 +1,6 @@
 services:
   dashboard:
-    build: .
+    image: sluberskihomelab/ditdashdot:latest
     ports:
       - "80:80"
     volumes:
