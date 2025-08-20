@@ -8,7 +8,8 @@ const App = () => {
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
   const [mode, setMode] = useState("light_mode");
   const [showDetails, setShowDetails] = useState(true);
-  const [statuses, setStatuses] = useState({}); // { [serviceKey]: true/false }
+  const [statuses, setStatuses] = useState({});
+  const [backgroundUrl, setBackgroundUrl] = useState(""); // new state
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -20,6 +21,7 @@ const App = () => {
         if (data.groups) setGroups(data.groups);
         if (data.mode) setMode(data.mode);
         if (typeof data.show_details === "boolean") setShowDetails(data.show_details);
+        if (data.background_url) setBackgroundUrl(data.background_url);
       } catch (err) {
         console.error("Failed to load config.yml:", err);
       }
@@ -27,7 +29,6 @@ const App = () => {
     loadConfig();
   }, []);
 
-  // Ping services every minute
   useEffect(() => {
     let intervalId;
 
@@ -37,7 +38,6 @@ const App = () => {
         for (const service of group.services || []) {
           const key = `${service.ip}:${service.port}`;
           try {
-            // Try to fetch the service URL with a short timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
             const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
@@ -52,8 +52,8 @@ const App = () => {
     };
 
     if (groups.length > 0) {
-      pingServices(); // initial ping
-      intervalId = setInterval(pingServices, 60000); // every minute
+      pingServices();
+      intervalId = setInterval(pingServices, 60000);
     }
 
     return () => {
@@ -70,7 +70,7 @@ const App = () => {
       mode === "trans_dark" ? "#fff"
       : "#1a1616ff",
     minHeight: '100vh',
-    backgroundImage: 'url(/background.jpg)',
+    backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined,
     backgroundSize: 'cover'
   };
 

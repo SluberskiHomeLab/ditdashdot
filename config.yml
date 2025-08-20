@@ -1,6 +1,7 @@
 title: Homelab Dashboard
-mode: dark_mode # options: dark_mode, light_mode, trans_light, trans_dark
+mode: dark_mode # options: dark_mode, light_mode, trans_light, trans_dark, service_mode
 show_details: true # or false
+background_url: https://your-image-url.com/background.jpg
 groups: # each group will be a separate vertical section in the dashboard
   - title: Home Automation
     services:
