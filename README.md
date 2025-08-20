@@ -19,7 +19,7 @@
 ### Prerequisites
 
 - [Docker](https://www.docker.com/) installed on your host machine
-- [Docker Compose](https://docs.docker.com/compose/) (optional, for Compose setup)
+- [Docker Compose](https://docs.docker.com/compose/) 
 
 ### Quick Start (Docker Compose)
 
