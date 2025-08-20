@@ -28,21 +28,6 @@
    git clone https://github.com/SluberskiHomeLab/ditdashdot.git
    cd ditdashdot
    ```
-
-   Or create a docker-compose.yml file in your preferred directory using the below code, add your config.yml and background.jpg files to your directory.
-   ```yml
-   services:
-     dashboard:
-       image: sluberskihomelab/ditdashdot:latest
-       ports:
-         - "80:80"
-       volumes:
-         - ./config.yml:/usr/share/nginx/html/config.yml
-         - ./background.jpg:/usr/share/nginx/html/background.jpg
-        # - /path/to/your/config.yml:/usr/share/nginx/html/config.yml # For custom directory.  Make sure file exists prior to running.
-        # - /path/to/your/background.jpg:/usr/share/nginx/html/background.jpg # For custom directory.  Make sure file exists prior to running.
-       restart: always
-   ```
    
 2. Start the service:
 
