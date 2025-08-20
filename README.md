@@ -12,6 +12,8 @@
 - Clean design focused on usability
 - Easily configurable to fit your homelab setup
 - Simple yaml configuration
+- Integrated Service pings
+- Dark mode support
 
 ## Getting Started
 
@@ -54,13 +56,26 @@
 
 ## Configuration
 
-Configuration is designed to be straightforward. Additional documentation can be found HERE.
+Configuration is designed to be straightforward. 
+
+### config.yml
+
+Config.yml is the primary configuration file for the dashboard.  This is where the services configuration is layed out.  I have included a sample config.yml file in this repo.  Place this config in the root of the project folder.  
+
+### background.png
+
+If you wish to use a different image for the background of your dashboard, replace the background.png file with your own.  I will add upload support for this later within the dashboard.  
+
+### Additional notes
+
+- In order for you to have service status on the dashboard, you will need to input 10 and port.  It will not work without this.  I have this configured so you can have reverse proxied addresses inputted for the URL but the ping will be to the direct service ip.
 
 ## Technologies Used
 
 - JavaScript (React.js)
 - Docker
 - HTML
+- yaml
 
 ## Contributing
 
