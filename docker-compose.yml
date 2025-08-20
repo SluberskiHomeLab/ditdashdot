@@ -5,5 +5,5 @@ services:
       - "80:80"
     volumes:
       - ./config.yml:/usr/share/nginx/html/config.yml
-      - ./background.png:/usr/share/nginx/html/background.png
+      - ./background.jpg:/usr/share/nginx/html/background.jpg
     restart: always
