@@ -6,8 +6,10 @@ const App = () => {
   const [groups, setGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
-  const [mode, setMode] = useState("light_mode"); // default mode
-  const [showDetails, setShowDetails] = useState(true); // default
+  const [mode, setMode] = useState("light_mode");
+  const [showDetails, setShowDetails] = useState(true);
+  const [statuses, setStatuses] = useState({});
+  const [backgroundUrl, setBackgroundUrl] = useState(""); // new state
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -19,12 +21,45 @@ const App = () => {
         if (data.groups) setGroups(data.groups);
         if (data.mode) setMode(data.mode);
         if (typeof data.show_details === "boolean") setShowDetails(data.show_details);
+        if (data.background_url) setBackgroundUrl(data.background_url);
       } catch (err) {
         console.error("Failed to load config.yml:", err);
       }
     };
     loadConfig();
   }, []);
+
+  useEffect(() => {
+    let intervalId;
+
+    const pingServices = async () => {
+      const newStatuses = {};
+      for (const group of groups) {
+        for (const service of group.services || []) {
+          const key = `${service.ip}:${service.port}`;
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
+            clearTimeout(timeoutId);
+            newStatuses[key] = response.ok;
+          } catch {
+            newStatuses[key] = false;
+          }
+        }
+      }
+      setStatuses(newStatuses);
+    };
+
+    if (groups.length > 0) {
+      pingServices();
+      intervalId = setInterval(pingServices, 60000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [groups]);
 
   const themeStyles = {
     backgroundColor:
@@ -35,7 +70,7 @@ const App = () => {
       mode === "trans_dark" ? "#fff"
       : "#1a1616ff",
     minHeight: '100vh',
-    backgroundImage: 'url(/background.jpg)',
+    backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined,
     backgroundSize: 'cover'
   };
 
@@ -65,9 +100,18 @@ const App = () => {
           <div key={idx} style={{ margin: '40px 0 0 0' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>{group.title}</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
-              {filtered.map((service, index) => (
-                <ServiceCard key={index} service={service} showDetails={showDetails} mode={mode} />
-              ))}
+              {filtered.map((service, index) => {
+                const key = `${service.ip}:${service.port}`;
+                return (
+                  <ServiceCard
+                    key={index}
+                    service={service}
+                    showDetails={showDetails}
+                    mode={mode}
+                    status={statuses[key]}
+                  />
+                );
+              })}
             </div>
           </div>
         );

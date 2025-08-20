@@ -3,7 +3,6 @@
 **ditdashdot** is a simple, clean, and easy-to-configure services dashboard designed specifically for homelabs. Built with React.js and containerized with Docker, it provides a central hub to view and manage your homelab services.
 
 ***THIS IS A WORK IN PROGRESS AND IS FAR FROM COMPLETE! THIS IS IN DEVELOPMENT SO USE AT YOUR OWN RISK***
-***THERE IS NO REGISTRY ENTRY AS OF YET.  ONCE RELASE 1.0 IS OUT, I WILL CREATE A REGISTRY ENTRY***
 ## Features
 
 - Simple and intuitive dashboard interface
