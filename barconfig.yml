@@ -1,0 +1,10 @@
+icons: # Pre-provided list of icons of some of my favorite services as examples
+  - iconUrl: https://cdn.jsdelivr.net/gh/selfhst/icons/png/github.png
+    link: https://github.com/SluberskiHomelab
+    alt: GitHub
+  - iconUrl: https://cdn.jsdelivr.net/gh/selfhst/icons/png/proxmox-helper-scripts.png
+    link: https://community-scripts.github.io/ProxmoxVE/
+    alt: Proxmox Helper Scripts
+  - iconUrl: https://cdn.jsdelivr.net/gh/selfhst/icons/png/proton.png
+    link: https://proton.me
+    alt: Proton Suite
