@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ServiceCard = ({ service, showDetails = true, mode = "light_mode" }) => {
+const ServiceCard = ({ service, showDetails = true, mode = "light_mode", status }) => {
   let background, color;
   if (mode === "dark_mode") {
     background = "#222";
@@ -14,6 +14,17 @@ const ServiceCard = ({ service, showDetails = true, mode = "light_mode" }) => {
   } else if (mode === "trans_dark") {
     background = "transparent";
     color = "#fff";
+  } else if (mode === "service_mode") {
+    if (status === undefined) {
+      background = "#bbb";
+      color = "#222";
+    } else if (status) {
+      background = "#82ff82ff";
+      color = "#fff";
+    } else {
+      background = "#ff5959ff";
+      color = "#fff";
+    }
   } else {
     background = "#fff";
     color = "#1a1616ff";
@@ -39,6 +50,22 @@ const ServiceCard = ({ service, showDetails = true, mode = "light_mode" }) => {
       }}
       title={`Open ${service.name}`}
     >
+      {/* Remove dot for service_mode */}
+      {mode !== "service_mode" && (
+        <div style={{ position: 'absolute', top: '15px', left: '15px' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: status === undefined ? '#bbb' : status ? '#82ff82ff' : '#ff5959ff',
+              border: '1px solid #888'
+            }}
+            title={status === undefined ? "Checking..." : status ? "Online" : "Unreachable"}
+          />
+        </div>
+      )}
       <img
         src={service.iconUrl}
         alt={service.name}
