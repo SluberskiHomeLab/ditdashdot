@@ -1,0 +1,10 @@
+icons:
+  - iconUrl: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+    link: https://github.com/SluberskiHomelab
+    alt: GitHub
+  - iconUrl: https://www.home-assistant.io/images/favicon.ico
+    link: https://www.home-assistant.io/
+    alt: Home Assistant
+  - iconUrl: https://pi-hole.net/wp-content/uploads/2016/12/cropped-Vortex-R-192x192.png
+    link: https://pi-hole.net/
+    alt: Pi-hole
