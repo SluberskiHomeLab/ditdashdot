@@ -6,4 +6,5 @@ services:
     volumes:
       - ./config.yml:/usr/share/nginx/html/config.yml
       - ./background.jpg:/usr/share/nginx/html/background.jpg
+      - ./barconfig.yml:/usr/share/nginx/html/barconfig.yml
     restart: always
