@@ -19,10 +19,10 @@ const ServiceCard = ({ service, showDetails = true, mode = "light_mode", status 
       background = "#bbb";
       color = "#222";
     } else if (status) {
-      background = "#00cc00";
+      background = "#82ff82ff";
       color = "#fff";
     } else {
-      background = "#cc0000";
+      background = "#ff5959ff";
       color = "#fff";
     }
   } else {
@@ -59,7 +59,7 @@ const ServiceCard = ({ service, showDetails = true, mode = "light_mode", status 
               width: '12px',
               height: '12px',
               borderRadius: '50%',
-              background: status === undefined ? '#bbb' : status ? '#00cc00' : '#cc0000',
+              background: status === undefined ? '#bbb' : status ? '#82ff82ff' : '#ff5959ff',
               border: '1px solid #888'
             }}
             title={status === undefined ? "Checking..." : status ? "Online" : "Unreachable"}
