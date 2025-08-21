@@ -101,8 +101,17 @@ const App = () => {
     <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles, position: 'relative' }}>
       <div style={{ backgroundColor: 'transparent', padding: '10px', textAlign: 'center', color: themeStyles.color }}>
         <h1 style={{ margin: 0 }}>{dashboardTitle}</h1>
+      </div>
+      <div style={{ textAlign: 'center', margin: '5px 0', color: themeStyles.color }}>
+        <input
+          type='text'
+          placeholder='Search services...'
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ padding: '8px', width: '300px', borderRadius: '5px', border: '1px solid #ccc', color: themeStyles.color, background: 'transparent' }}
+        />
         {barIcons.length > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '18px', margin: '10px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '18px', margin: '18px 0 0 0' }}>
             {barIcons.map((icon, idx) => (
               <button
                 key={idx}
@@ -126,15 +135,6 @@ const App = () => {
             ))}
           </div>
         )}
-      </div>
-      <div style={{ textAlign: 'center', margin: '5px 0', color: themeStyles.color }}>
-        <input
-          type='text'
-          placeholder='Search services...'
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: '8px', width: '300px', borderRadius: '5px', border: '1px solid #ccc', color: themeStyles.color, background: 'transparent' }}
-        />
       </div>
       {groups.map((group, idx) => {
         const filtered = filterServices(group.services || []);
