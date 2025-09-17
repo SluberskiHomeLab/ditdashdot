@@ -2,6 +2,14 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
+## [B1.2.2] - 2025-09-17
+
+### Fixed
+- Fixed Dockerfile configuration for proper config file handling
+- Improved nginx configuration for better performance and security
+- Added proper volume mounts for configuration files
+- Updated Docker build and run instructions in README.md
+
 ## [B1.2.1] - 2025-09-17
 
 ### Added
