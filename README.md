@@ -53,7 +53,15 @@ BarConfig.yml is the configuration file for the small quick access icons below t
 \
 By default, DitDashDot looks for the config.yml and barconfig.yml in jthe root of the project folder that the docker compose file is in.  
 \
-There are a few things that you can customize in the config.yml to make your dashboard exactly how you want it.  
+There are several customization options available in the config.yml to make your dashboard exactly how you want it.  
+
+##### Appearance Settings
+You can customize the appearance of your dashboard using these settings:
+```yml
+font_family: "Arial, sans-serif" # Custom font for the dashboard
+font_size: "14px"               # Base font size for text
+icon_size: "32px"              # Size of service icons
+```
 
 ##### Title
 Change this variable to set the title of your page

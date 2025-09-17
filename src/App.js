@@ -11,6 +11,9 @@ const App = () => {
   const [statuses, setStatuses] = useState({});
   const [backgroundUrl, setBackgroundUrl] = useState("");
   const [barIcons, setBarIcons] = useState([]); // new state for bar icons
+  const [fontFamily, setFontFamily] = useState("Arial, sans-serif");
+  const [fontSize, setFontSize] = useState("14px");
+  const [iconSize, setIconSize] = useState("32px");
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -23,6 +26,9 @@ const App = () => {
         if (data.mode) setMode(data.mode);
         if (typeof data.show_details === "boolean") setShowDetails(data.show_details);
         if (data.background_url) setBackgroundUrl(data.background_url);
+        if (data.font_family) setFontFamily(data.font_family);
+        if (data.font_size) setFontSize(data.font_size);
+        if (data.icon_size) setIconSize(data.icon_size);
       } catch (err) {
         console.error("Failed to load config.yml:", err);
       }
@@ -152,6 +158,9 @@ const App = () => {
                     showDetails={showDetails}
                     mode={mode}
                     status={statuses[key]}
+                    fontFamily={fontFamily}
+                    fontSize={fontSize}
+                    iconSize={iconSize}
                   />
                 );
               })}
