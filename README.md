@@ -25,7 +25,9 @@
 - [Docker](https://www.docker.com/) installed on your host machine
 - [Docker Compose](https://docs.docker.com/compose/) 
 
-### Quick Start (Docker Compose)
+### Installation Options
+
+#### Option 1: Using Docker Compose (Recommended)
 
 1. Clone the repository:
    ```bash
@@ -34,12 +36,34 @@
    ```
    
 2. Start the service:
-
    ```bash
    docker-compose up -d
    ```
 
-3. Open your browser and navigate to `http://localhost:80` to view your dashboard.
+#### Option 2: Using Docker Directly
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/SluberskiHomeLab/ditdashdot.git
+   cd ditdashdot
+   ```
+
+2. Build the Docker image:
+   ```bash
+   docker build -t ditdashdot .
+   ```
+
+3. Run the container:
+   ```bash
+   docker run -d \
+     -p 80:80 \
+     -v $(pwd)/config.yml:/usr/share/nginx/html/config.yml \
+     -v $(pwd)/barconfig.yml:/usr/share/nginx/html/barconfig.yml \
+     --name ditdashdot \
+     ditdashdot
+   ```
+
+After installation using either method, open your browser and navigate to `http://localhost:80` to view your dashboard.
 
 ## Configuration
 

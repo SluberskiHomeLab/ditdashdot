@@ -2,7 +2,13 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
-## [1.2.0] - 2025-09-16
+## [B1.2.1] - 2025-09-17
+
+### Added
+- Dockerfile for direct Docker build and deployment
+- Updated README.md with Docker build instructions
+
+## [B1.2.0] - 2025-09-16
 
 ### Added
 - Font customization support through `config.yml`
