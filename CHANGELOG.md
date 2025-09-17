@@ -2,6 +2,12 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
+## [B1.2.3] - 2025-09-17
+
+### Fixed
+- Fixed Dockerfile keyword casing to follow Docker style conventions
+- Fixed "AS" keyword capitalization in multi-stage build
+
 ## [B1.2.2] - 2025-09-17
 
 ### Fixed
