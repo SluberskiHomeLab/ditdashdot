@@ -109,14 +109,17 @@ font_size: "14px"               # Base font size for text
 icon_size: "32px"              # Size of service icons
 ```
 
-##### Title
-Change this variable to set the title of your page
+##### Title and Browser Settings
+You can customize both the dashboard title and browser-specific elements:
 ```yml
+# Dashboard title shown at the top of the page
 title: Homelab Dashboard
-```
-*If you want to set the tab title, you can change that in index.html on the <title> section
-```html
-<title>Homelab Dashboard</title>
+
+# Browser tab title
+tab_title: "My Homelab Dashboard"
+
+# Custom favicon URL
+favicon_url: "https://example.com/favicon.ico"
 ```
 
 ##### Theme

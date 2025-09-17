@@ -2,13 +2,20 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
-## [B1.2.3] - 2025-09-17
+## [B1.1.5] - 2025-09-17
+
+### Added
+- Added support for customizing browser tab title through config.yml
+- Added support for customizing favicon through config.yml
+- Updated documentation with new configuration options
+
+## [B1.1.4] - 2025-09-17
 
 ### Fixed
 - Fixed Dockerfile keyword casing to follow Docker style conventions
 - Fixed "AS" keyword capitalization in multi-stage build
 
-## [B1.2.2] - 2025-09-17
+## [B1.1.3] - 2025-09-17
 
 ### Fixed
 - Fixed Dockerfile configuration for proper config file handling
@@ -16,13 +23,13 @@ All notable changes to DitDashDot will be documented in this file.
 - Added proper volume mounts for configuration files
 - Updated Docker build and run instructions in README.md
 
-## [B1.2.1] - 2025-09-17
+## [B1.1.2] - 2025-09-17
 
 ### Added
 - Dockerfile for direct Docker build and deployment
 - Updated README.md with Docker build instructions
 
-## [B1.2.0] - 2025-09-16
+## [B1.1.1] - 2025-09-16
 
 ### Added
 - Font customization support through `config.yml`

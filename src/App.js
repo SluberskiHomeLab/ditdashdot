@@ -6,6 +6,8 @@ const App = () => {
   const [groups, setGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
+  const [tabTitle, setTabTitle] = useState("Homelab Dashboard");
+  const [faviconUrl, setFaviconUrl] = useState("");
   const [mode, setMode] = useState("light_mode");
   const [showDetails, setShowDetails] = useState(true);
   const [statuses, setStatuses] = useState({});
@@ -15,6 +17,21 @@ const App = () => {
   const [fontSize, setFontSize] = useState("14px");
   const [iconSize, setIconSize] = useState("32px");
 
+  // Effect to update document title and favicon
+  useEffect(() => {
+    // Update document title
+    document.title = tabTitle;
+
+    // Update favicon
+    if (faviconUrl) {
+      const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+      link.type = 'image/x-icon';
+      link.rel = 'shortcut icon';
+      link.href = faviconUrl;
+      document.getElementsByTagName('head')[0].appendChild(link);
+    }
+  }, [tabTitle, faviconUrl]);
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -22,6 +39,8 @@ const App = () => {
         const text = await response.text();
         const data = yaml.load(text);
         if (data.title) setDashboardTitle(data.title);
+        if (data.tab_title) setTabTitle(data.tab_title);
+        if (data.favicon_url) setFaviconUrl(data.favicon_url);
         if (data.groups) setGroups(data.groups);
         if (data.mode) setMode(data.mode);
         if (typeof data.show_details === "boolean") setShowDetails(data.show_details);
