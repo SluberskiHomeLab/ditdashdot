@@ -1,6 +1,14 @@
 import React from 'react';
 
-const ServiceCard = ({ service, showDetails = true, mode = "light_mode", status }) => {
+const ServiceCard = ({ 
+  service, 
+  showDetails = true, 
+  mode = "light_mode", 
+  status,
+  fontFamily = "Arial, sans-serif",
+  fontSize = "14px",
+  iconSize = "32px"
+}) => {
   let background, color;
   if (mode === "dark_mode") {
     background = "#222";
@@ -46,7 +54,9 @@ const ServiceCard = ({ service, showDetails = true, mode = "light_mode", status 
         border: 'none',
         cursor: 'pointer',
         transition: 'box-shadow 0.2s',
-        outline: 'none'
+        outline: 'none',
+        fontFamily: fontFamily,
+        fontSize: fontSize
       }}
       title={`Open ${service.name}`}
     >
@@ -69,7 +79,7 @@ const ServiceCard = ({ service, showDetails = true, mode = "light_mode", status 
       <img
         src={service.iconUrl}
         alt={service.name}
-        style={{ width: '48px', height: '48px', marginBottom: '10px' }}
+        style={{ width: iconSize, height: iconSize, marginBottom: '10px' }}
       />
       <h2 style={{ fontSize: '1.2em', margin: '10px 0' }}>{service.name}</h2>
       {showDetails && (

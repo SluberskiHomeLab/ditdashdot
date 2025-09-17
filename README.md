@@ -25,7 +25,9 @@
 - [Docker](https://www.docker.com/) installed on your host machine
 - [Docker Compose](https://docs.docker.com/compose/) 
 
-### Quick Start (Docker Compose)
+### Installation Options
+
+#### Option 1: Using Docker Compose (Recommended)
 
 1. Clone the repository:
    ```bash
@@ -34,12 +36,56 @@
    ```
    
 2. Start the service:
-
    ```bash
    docker-compose up -d
    ```
 
-3. Open your browser and navigate to `http://localhost:80` to view your dashboard.
+#### Option 2: Using Docker Directly
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/SluberskiHomeLab/ditdashdot.git
+   cd ditdashdot
+   ```
+
+2. Create your configuration files:
+   ```bash
+   # Copy and edit the sample config files
+   cp config.sample.yml config.yml
+   cp barconfig.sample.yml barconfig.yml
+   ```
+
+3. Build the Docker image:
+   ```bash
+   docker build -t ditdashdot .
+   ```
+
+4. Run the container:
+   ```bash
+   docker run -d \
+     -p 80:80 \
+     -v $(pwd)/config.yml:/usr/share/nginx/html/config.yml \
+     -v $(pwd)/barconfig.yml:/usr/share/nginx/html/barconfig.yml \
+     --name ditdashdot \
+     ditdashdot
+   ```
+
+2. Build the Docker image:
+   ```bash
+   docker build -t ditdashdot .
+   ```
+
+3. Run the container:
+   ```bash
+   docker run -d \
+     -p 80:80 \
+     -v $(pwd)/config.yml:/usr/share/nginx/html/config.yml \
+     -v $(pwd)/barconfig.yml:/usr/share/nginx/html/barconfig.yml \
+     --name ditdashdot \
+     ditdashdot
+   ```
+
+After installation using either method, open your browser and navigate to `http://localhost:80` to view your dashboard.
 
 ## Configuration
 
@@ -53,16 +99,27 @@ BarConfig.yml is the configuration file for the small quick access icons below t
 \
 By default, DitDashDot looks for the config.yml and barconfig.yml in jthe root of the project folder that the docker compose file is in.  
 \
-There are a few things that you can customize in the config.yml to make your dashboard exactly how you want it.  
+There are several customization options available in the config.yml to make your dashboard exactly how you want it.  
 
-##### Title
-Change this variable to set the title of your page
+##### Appearance Settings
+You can customize the appearance of your dashboard using these settings:
 ```yml
-title: Homelab Dashboard
+font_family: "Arial, sans-serif" # Custom font for the dashboard
+font_size: "14px"               # Base font size for text
+icon_size: "32px"              # Size of service icons
 ```
-*If you want to set the tab title, you can change that in index.html on the <title> section
-```html
-<title>Homelab Dashboard</title>
+
+##### Title and Browser Settings
+You can customize both the dashboard title and browser-specific elements:
+```yml
+# Dashboard title shown at the top of the page
+title: Homelab Dashboard
+
+# Browser tab title
+tab_title: "My Homelab Dashboard"
+
+# Custom favicon URL
+favicon_url: "https://example.com/favicon.ico"
 ```
 
 ##### Theme
