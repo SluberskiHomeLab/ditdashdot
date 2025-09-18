@@ -353,7 +353,7 @@ const ConfigurationPage = () => {
               <ListItem key={service.id}>
                 <ListItemText 
                   primary={service.name}
-                  secondary={service.url}
+                  secondary={`${service.url} (${service.ip}:${service.port})`}
                 />
                 <ListItemSecondaryAction>
                   <IconButton onClick={() => handleEdit('services', service)}>
@@ -442,11 +442,34 @@ const ConfigurationPage = () => {
                   sx={{ mb: 2 }}
                 />
                 <TextField
+                  label="Icon URL"
+                  fullWidth
+                  value={editingItem?.icon_url || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, icon_url: e.target.value }))}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="IP Address"
+                  fullWidth
+                  value={editingItem?.ip || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, ip: e.target.value }))}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Port"
+                  type="number"
+                  fullWidth
+                  value={editingItem?.port || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, port: parseInt(e.target.value, 10) }))}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
                   select
                   label="Group"
                   fullWidth
                   value={editingItem?.group_id || ''}
-                  onChange={(e) => setEditingItem(prev => ({ ...prev, group_id: e.target.value }))}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, group_id: parseInt(e.target.value, 10) }))}
+                  sx={{ mb: 2 }}
                 >
                   {groups.map((group) => (
                     <MenuItem key={group.id} value={group.id}>
@@ -454,6 +477,13 @@ const ConfigurationPage = () => {
                     </MenuItem>
                   ))}
                 </TextField>
+                <TextField
+                  label="Display Order"
+                  type="number"
+                  fullWidth
+                  value={editingItem?.display_order || 0}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, display_order: parseInt(e.target.value, 10) }))}
+                />
               </>
             )}
             {dialogType === 'icons' && (

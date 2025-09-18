@@ -1,7 +1,43 @@
 import React from 'react';
 
-const ServiceCard = ({ 
-  service, 
+const Servic  return (
+    <button
+      onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+      style={{
+        background,
+        color,
+        borderRadius: '10px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        padding: '20px',
+        minWidth: '220px',
+        maxWidth: '250px',
+        textAlign: 'center',
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily,
+        fontSize,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px'
+      }}
+    >
+      {icon_url && (
+        <img 
+          src={icon_url} 
+          alt={name}
+          style={{
+            width: iconSize,
+            height: iconSize,
+            objectFit: 'contain'
+          }}
+        />
+      )}
+      <div>{name}</div>
+      {showDetails && (
+        <div style={{ fontSize: '0.8em', opacity: 0.8 }}>{ip}:{port}</div>
+      )} 
+  service: { name, url, icon_url, ip, port }, 
   showDetails = true, 
   mode = "light_mode", 
   status,
@@ -40,7 +76,7 @@ const ServiceCard = ({
 
   return (
     <button
-      onClick={() => window.open(service.url, '_blank', 'noopener,noreferrer')}
+      onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
       style={{
         background,
         color,
@@ -48,6 +84,49 @@ const ServiceCard = ({
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         padding: '20px',
         minWidth: '220px',
+        maxWidth: '250px',
+        textAlign: 'center',
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily,
+        fontSize,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px'
+      }}
+    >
+      {icon_url && (
+        <img 
+          src={icon_url} 
+          alt={name}
+          style={{
+            width: iconSize,
+            height: iconSize,
+            objectFit: 'contain'
+          }}
+        />
+      )}
+      <div>{name}</div>
+      {showDetails && (
+        <div style={{ fontSize: '0.8em', opacity: 0.8 }}>{ip}:{port}</div>
+      )}
+      }}>
+        {icon_url && (
+          <img 
+            src={icon_url} 
+            alt={name}
+            style={{
+              width: iconSize,
+              height: iconSize,
+              objectFit: 'contain'
+            }}
+          />
+        )}
+        <div>{name}</div>
+        {showDetails && (
+          <div style={{ fontSize: '0.8em', opacity: 0.8 }}>{ip}:{port}</div>
+        )
         maxWidth: '250px',
         textAlign: 'center',
         position: 'relative',
