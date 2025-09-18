@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const API_URL = '/api'; // Using relative URL
 
 const ConfigurationPage = () => {
   const [config, setConfig] = useState({

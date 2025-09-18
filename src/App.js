@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import ConfigEditor from './components/ConfigEditor';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import ConfigurationPage from './components/config/ConfigurationPage';
 
 const Dashboard = () => {
   const [groups, setGroups] = useState([]);
