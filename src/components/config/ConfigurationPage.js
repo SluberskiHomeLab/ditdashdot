@@ -381,18 +381,29 @@ const ConfigurationPage = () => {
           <List>
             {icons.map((icon) => (
               <ListItem key={icon.id}>
-                <ListItemText 
-                  primary={icon.name}
-                  secondary={icon.url}
-                />
-                <ListItemSecondaryAction>
-                  <IconButton onClick={() => handleEdit('icons', icon)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete('icons', icon.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                  <img 
+                    src={icon.iconUrl} 
+                    alt={icon.alt} 
+                    style={{ 
+                      width: '32px', 
+                      height: '32px', 
+                      objectFit: 'contain' 
+                    }} 
+                  />
+                  <ListItemText 
+                    primary={icon.alt}
+                    secondary={`Link: ${icon.link}`}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton onClick={() => handleEdit('icons', icon)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete('icons', icon.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </Box>
               </ListItem>
             ))}
           </List>
@@ -492,15 +503,30 @@ const ConfigurationPage = () => {
                   autoFocus
                   label="Icon Name"
                   fullWidth
-                  value={editingItem?.name || ''}
-                  onChange={(e) => setEditingItem(prev => ({ ...prev, name: e.target.value }))}
+                  value={editingItem?.alt || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, alt: e.target.value }))}
                   sx={{ mb: 2 }}
                 />
                 <TextField
                   label="Icon URL"
                   fullWidth
-                  value={editingItem?.url || ''}
-                  onChange={(e) => setEditingItem(prev => ({ ...prev, url: e.target.value }))}
+                  value={editingItem?.iconUrl || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, iconUrl: e.target.value }))}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Link URL"
+                  fullWidth
+                  value={editingItem?.link || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, link: e.target.value }))}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Display Order"
+                  type="number"
+                  fullWidth
+                  value={editingItem?.display_order || 0}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, display_order: parseInt(e.target.value, 10) }))}
                 />
               </>
             )}
