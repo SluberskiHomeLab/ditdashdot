@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import ConfigEditor from './components/ConfigEditor';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 const Dashboard = () => {
   const [groups, setGroups] = useState([]);
@@ -33,41 +34,52 @@ const Dashboard = () => {
     }
   }, [tabTitle, faviconUrl]);
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const response = await fetch('/config.yml');
-        const text = await response.text();
-        const data = yaml.load(text);
-        if (data.title) setDashboardTitle(data.title);
-        if (data.tab_title) setTabTitle(data.tab_title);
-        if (data.favicon_url) setFaviconUrl(data.favicon_url);
-        if (data.groups) setGroups(data.groups);
-        if (data.mode) setMode(data.mode);
-        if (typeof data.show_details === "boolean") setShowDetails(data.show_details);
-        if (data.background_url) setBackgroundUrl(data.background_url);
-        if (data.font_family) setFontFamily(data.font_family);
-        if (data.font_size) setFontSize(data.font_size);
-        if (data.icon_size) setIconSize(data.icon_size);
+        setLoading(true);
+        const [settingsRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
+          fetch('http://localhost:3001/api/settings'),
+          fetch('http://localhost:3001/api/groups'),
+          fetch('http://localhost:3001/api/services'),
+          fetch('http://localhost:3001/api/icons')
+        ]);
+
+        const [settingsData, groupsData, servicesData, iconsData] = await Promise.all([
+          settingsRes.json(),
+          groupsRes.json(),
+          servicesRes.json(),
+          iconsRes.json()
+        ]);
+
+        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData });
+
+        if (settingsData) {
+          setDashboardTitle(settingsData.title || "Homelab Dashboard");
+          setTabTitle(settingsData.tab_title || "Homelab Dashboard");
+          setFaviconUrl(settingsData.favicon_url || "");
+          setMode(settingsData.mode || "light_mode");
+          setShowDetails(settingsData.show_details !== false);
+          setBackgroundUrl(settingsData.background_url || "");
+          setFontFamily(settingsData.font_family || "Arial, sans-serif");
+          setFontSize(settingsData.font_size || "14px");
+          setIconSize(settingsData.icon_size || "32px");
+        }
+
+        setGroups(groupsData || []);
+        setBarIcons(iconsData || []);
+        setError(null);
       } catch (err) {
-        console.error("Failed to load config.yml:", err);
+        console.error("Failed to load configuration:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
     loadConfig();
-  }, []);
-
-  useEffect(() => {
-    const loadBarConfig = async () => {
-      try {
-        const response = await fetch('/barconfig.yml');
-        const text = await response.text();
-        const data = yaml.load(text);
-        if (Array.isArray(data.icons)) setBarIcons(data.icons);
-      } catch (err) {
-        // If barconfig.yml doesn't exist, just ignore
-      }
-    };
-    loadBarConfig();
   }, []);
 
   useEffect(() => {
