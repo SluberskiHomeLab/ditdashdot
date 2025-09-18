@@ -187,7 +187,6 @@ const ConfigurationPage = () => {
       });
     }
   };
-  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
