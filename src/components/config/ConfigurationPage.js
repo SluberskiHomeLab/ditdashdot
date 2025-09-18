@@ -48,7 +48,7 @@ const TabPanel = (props) => {
 
 const ConfigurationPage = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [config, setConfig] = useState({
+  const [settings, setSettings] = useState({
     title: '',
     tab_title: '',
     favicon_url: '',
@@ -73,14 +73,14 @@ const ConfigurationPage = () => {
 
   const fetchData = async () => {
     try {
-      const [configRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
+      const [settingsRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
         axios.get(`${API_URL}/settings`),
         axios.get(`${API_URL}/groups`),
         axios.get(`${API_URL}/services`),
         axios.get(`${API_URL}/icons`)
       ]);
 
-      setConfig(configRes.data || {});
+      setSettings(settingsRes.data || {});
       setGroups(groupsRes.data || []);
       setServices(servicesRes.data || []);
       setIcons(iconsRes.data || []);
@@ -97,7 +97,7 @@ const ConfigurationPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${API_URL}/settings`, config);
+      await axios.put(`${API_URL}/settings`, settings);
       setAlert({
         open: true,
         message: 'Settings saved successfully',
@@ -115,7 +115,7 @@ const ConfigurationPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setConfig(prev => ({
+    setSettings(prev => ({
       ...prev,
       [name]: value
     }));
@@ -123,7 +123,7 @@ const ConfigurationPage = () => {
 
   const handleSwitchChange = (e) => {
     const { name, checked } = e.target;
-    setConfig(prev => ({
+    setSettings(prev => ({
       ...prev,
       [name]: checked
     }));
@@ -135,7 +135,7 @@ const ConfigurationPage = () => {
 
   const handleAdd = (type) => {
     setDialogType(type);
-    setEditingItem(null);
+    setEditingItem({});
     setDialogOpen(true);
   };
 
@@ -210,7 +210,7 @@ const ConfigurationPage = () => {
               <TextField
                 label="Dashboard Title"
                 name="title"
-                value={config.title}
+                value={settings.title}
                 onChange={handleChange}
                 fullWidth
               />
@@ -218,7 +218,7 @@ const ConfigurationPage = () => {
               <TextField
                 label="Browser Tab Title"
                 name="tab_title"
-                value={config.tab_title}
+                value={settings.tab_title}
                 onChange={handleChange}
                 fullWidth
               />
@@ -226,7 +226,7 @@ const ConfigurationPage = () => {
               <TextField
                 label="Favicon URL"
                 name="favicon_url"
-                value={config.favicon_url}
+                value={settings.favicon_url}
                 onChange={handleChange}
                 fullWidth
               />
@@ -235,7 +235,7 @@ const ConfigurationPage = () => {
                 select
                 label="Theme Mode"
                 name="mode"
-                value={config.mode}
+                value={settings.mode}
                 onChange={handleChange}
                 fullWidth
               >
@@ -249,7 +249,7 @@ const ConfigurationPage = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={config.show_details}
+                    checked={settings.show_details}
                     onChange={handleSwitchChange}
                     name="show_details"
                   />
@@ -260,7 +260,7 @@ const ConfigurationPage = () => {
               <TextField
                 label="Background URL"
                 name="background_url"
-                value={config.background_url}
+                value={settings.background_url}
                 onChange={handleChange}
                 fullWidth
               />
@@ -268,7 +268,7 @@ const ConfigurationPage = () => {
               <TextField
                 label="Font Family"
                 name="font_family"
-                value={config.font_family}
+                value={settings.font_family}
                 onChange={handleChange}
                 fullWidth
               />
@@ -276,7 +276,7 @@ const ConfigurationPage = () => {
               <TextField
                 label="Font Size"
                 name="font_size"
-                value={config.font_size}
+                value={settings.font_size}
                 onChange={handleChange}
                 fullWidth
               />
@@ -284,7 +284,7 @@ const ConfigurationPage = () => {
               <TextField
                 label="Icon Size"
                 name="icon_size"
-                value={config.icon_size}
+                value={settings.icon_size}
                 onChange={handleChange}
                 fullWidth
               />
