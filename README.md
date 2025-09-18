@@ -11,12 +11,13 @@
 - Built with React.js for a fast and modern web experience
 - Runs in Docker for easy deployment and management
 - Clean design focused on usability
-- Easily configurable to fit your homelab setup
-- Simple yaml configuration
+- Web-based configuration interface
+- PostgreSQL database for configuration storage
 - Integrated Service pings
 - Service_Mode theme for ping visibility
 - Dark mode support
 - Quick access icons
+- Real-time configuration updates
 
 ## Getting Started
 
@@ -25,9 +26,7 @@
 - [Docker](https://www.docker.com/) installed on your host machine
 - [Docker Compose](https://docs.docker.com/compose/) 
 
-### Installation Options
-
-#### Option 1: Using Docker Compose (Recommended)
+### Installation
 
 1. Clone the repository:
    ```bash
@@ -35,18 +34,19 @@
    cd ditdashdot
    ```
    
-2. Start the service:
+2. Build and start the services:
    ```bash
-   docker-compose up -d
+   docker-compose up -d --build
    ```
 
-#### Option 2: Using Docker Directly
+This will start three services:
+- Frontend Dashboard (accessible at http://localhost:80)
+- Backend API Server
+- PostgreSQL Database
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/SluberskiHomeLab/ditdashdot.git
-   cd ditdashdot
-   ```
+3. Access the dashboard:
+   - Main dashboard: http://localhost:80
+   - Configuration interface: http://localhost:80/config
 
 2. Create your configuration files:
    ```bash
@@ -89,16 +89,25 @@ After installation using either method, open your browser and navigate to `http:
 
 ## Configuration
 
-Configuration is designed to be straightforward. 
+DitDashDot now features a web-based configuration interface that makes it easy to manage your dashboard settings. 
 
-#### config
+### Web Configuration Interface
 
-Config.yml is the primary configuration file for the dashboard.  This is where the services configuration is layed out.  I have included a sample config.yml file in this repo. 
-\
-BarConfig.yml is the configuration file for the small quick access icons below the search bar.  I have also included a sample of this file.
-\
-By default, DitDashDot looks for the config.yml and barconfig.yml in jthe root of the project folder that the docker compose file is in.  
-\
+Access the configuration interface by navigating to `http://localhost:80/config`. Here you can:
+- Modify dashboard appearance and behavior
+- Manage service groups and services
+- Configure quick access icons
+- Preview changes in real-time
+
+All configuration is stored in a PostgreSQL database, providing:
+- Persistent storage
+- Backup capabilities
+- Multi-user access
+- Change history
+
+### Initial Setup
+
+When first starting the application, the database will be initialized with default settings. You can then use the configuration interface to customize your dashboard.
 There are several customization options available in the config.yml to make your dashboard exactly how you want it.  
 
 ##### Appearance Settings
@@ -187,10 +196,44 @@ Barconfig.yml is the config for your quick access icons.  You can configure thes
 
 ## Technologies Used
 
-- JavaScript (React.js)
-- Docker
-- HTML
-- yaml
+- Frontend:
+  - React.js
+  - Material-UI
+  - React Router
+
+- Backend:
+  - Node.js/Express
+  - PostgreSQL
+  - RESTful API
+
+- Infrastructure:
+  - Docker
+  - Docker Compose
+  - Nginx
+
+## Development
+
+To work on DitDashDot locally:
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   # Install frontend dependencies
+   npm install
+
+   # Install backend dependencies
+   cd server
+   npm install
+   ```
+
+3. Start the development environment:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+4. Make your changes
+5. Test thoroughly
+6. Submit a pull request
 
 ## Contributing
 
