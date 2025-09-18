@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import yaml from 'js-yaml';
 import ServiceCard from './components/ServiceCard';
+import ConfigurationPage from './components/config/ConfigurationPage';
 
-const App = () => {
+const Dashboard = () => {
   const [groups, setGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
@@ -201,6 +203,17 @@ const App = () => {
         Created by SluberskiHomelab on GitHub
       </div>
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/config" element={<ConfigurationPage />} />
+      </Routes>
+    </Router>
   );
 };
 

@@ -6,7 +6,13 @@
     "js-yaml": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "react-router-dom": "^6.16.0",
+    "@mui/material": "^5.14.10",
+    "@mui/icons-material": "^5.14.10",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "axios": "^1.5.0"
   },
   "scripts": {
     "start": "react-scripts start",

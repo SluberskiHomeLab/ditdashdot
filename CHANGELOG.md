@@ -2,6 +2,21 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
+## [B2.0.0] - 2025-09-18
+
+### Added
+- PostgreSQL database backend for storing configuration
+- Web-based configuration interface at /config endpoint
+- RESTful API for managing dashboard settings
+- Material-UI based configuration GUI
+- Real-time configuration updates
+- Docker Compose setup with database and API services
+
+### Changed
+- Configuration management moved from YAML files to database
+- Updated Docker setup to include PostgreSQL and API server
+- Improved configuration workflow with web interface
+
 ## [B1.1.5] - 2025-09-17
 
 ### Added
