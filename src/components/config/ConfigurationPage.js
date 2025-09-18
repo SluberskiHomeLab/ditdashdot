@@ -313,7 +313,7 @@ const ConfigurationPage = () => {
             {groups.map((group) => (
               <ListItem key={group.id}>
                 <ListItemText 
-                  primary={group.name}
+                  primary={group.title}
                 />
                 <ListItemSecondaryAction>
                   <IconButton onClick={() => handleEdit('groups', group)}>
@@ -396,13 +396,23 @@ const ConfigurationPage = () => {
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             {dialogType === 'groups' && (
-              <TextField
-                autoFocus
-                label="Group Name"
-                fullWidth
-                value={editingItem?.name || ''}
-                onChange={(e) => setEditingItem(prev => ({ ...prev, name: e.target.value }))}
-              />
+              <>
+                <TextField
+                  autoFocus
+                  label="Group Name"
+                  fullWidth
+                  value={editingItem?.title || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, title: e.target.value }))}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Display Order"
+                  type="number"
+                  fullWidth
+                  value={editingItem?.display_order || 0}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, display_order: parseInt(e.target.value, 10) }))}
+                />
+              </>
             )}
             {dialogType === 'services' && (
               <>
@@ -430,7 +440,7 @@ const ConfigurationPage = () => {
                 >
                   {groups.map((group) => (
                     <MenuItem key={group.id} value={group.id}>
-                      {group.name}
+                      {group.title}
                     </MenuItem>
                   ))}
                 </TextField>
