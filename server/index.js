@@ -61,7 +61,7 @@ app.put('/api/settings', async (req, res) => {
 // Groups routes
 app.get('/api/groups', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM groups ORDER BY position');
+    const result = await pool.query('SELECT * FROM groups ORDER BY display_order');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -71,10 +71,10 @@ app.get('/api/groups', async (req, res) => {
 
 app.post('/api/groups', async (req, res) => {
   try {
-    const { name, position } = req.body;
+    const { name, display_order } = req.body;
     const result = await pool.query(
-      'INSERT INTO groups (name, position) VALUES ($1, $2) RETURNING *',
-      [name, position]
+      'INSERT INTO groups (name, display_order) VALUES ($1, $2) RETURNING *',
+      [name, display_order]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -86,10 +86,10 @@ app.post('/api/groups', async (req, res) => {
 app.put('/api/groups/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, position } = req.body;
+    const { name, display_order } = req.body;
     const result = await pool.query(
-      'UPDATE groups SET name = $1, position = $2 WHERE id = $3 RETURNING *',
-      [name, position, id]
+      'UPDATE groups SET name = $1, display_order = $2 WHERE id = $3 RETURNING *',
+      [name, display_order, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -112,7 +112,7 @@ app.delete('/api/groups/:id', async (req, res) => {
 // Services routes
 app.get('/api/services', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM services ORDER BY position');
+    const result = await pool.query('SELECT * FROM services ORDER BY display_order');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -122,10 +122,10 @@ app.get('/api/services', async (req, res) => {
 
 app.post('/api/services', async (req, res) => {
   try {
-    const { name, url, icon, group_id, position } = req.body;
+    const { name, url, icon_url, group_id, display_order } = req.body;
     const result = await pool.query(
-      'INSERT INTO services (name, url, icon, group_id, position) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, url, icon, group_id, position]
+      'INSERT INTO services (name, url, icon_url, group_id, display_order) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, url, icon_url, group_id, display_order]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -137,10 +137,10 @@ app.post('/api/services', async (req, res) => {
 app.put('/api/services/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, url, icon, group_id, position } = req.body;
+    const { name, url, icon_url, group_id, display_order } = req.body;
     const result = await pool.query(
-      'UPDATE services SET name = $1, url = $2, icon = $3, group_id = $4, position = $5 WHERE id = $6 RETURNING *',
-      [name, url, icon, group_id, position, id]
+      'UPDATE services SET name = $1, url = $2, icon_url = $3, group_id = $4, display_order = $5 WHERE id = $6 RETURNING *',
+      [name, url, icon_url, group_id, display_order, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -163,7 +163,7 @@ app.delete('/api/services/:id', async (req, res) => {
 // Icons routes
 app.get('/api/icons', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM bar_icons ORDER BY position');
+    const result = await pool.query('SELECT * FROM bar_icons ORDER BY display_order');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -173,10 +173,10 @@ app.get('/api/icons', async (req, res) => {
 
 app.post('/api/icons', async (req, res) => {
   try {
-    const { name, url, icon, position } = req.body;
+    const { name, url, icon_url, display_order } = req.body;
     const result = await pool.query(
-      'INSERT INTO bar_icons (name, url, icon, position) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, url, icon, position]
+      'INSERT INTO bar_icons (name, url, icon_url, display_order) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, url, icon_url, display_order]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -188,10 +188,10 @@ app.post('/api/icons', async (req, res) => {
 app.put('/api/icons/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, url, icon, position } = req.body;
+    const { name, url, icon_url, display_order } = req.body;
     const result = await pool.query(
-      'UPDATE bar_icons SET name = $1, url = $2, icon = $3, position = $4 WHERE id = $5 RETURNING *',
-      [name, url, icon, position, id]
+      'UPDATE bar_icons SET name = $1, url = $2, icon_url = $3, display_order = $4 WHERE id = $5 RETURNING *',
+      [name, url, icon_url, display_order, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
