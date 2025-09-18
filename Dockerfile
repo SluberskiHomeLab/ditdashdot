@@ -28,12 +28,7 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy default configuration files
-COPY config.yml /usr/share/nginx/html/config.yml
-COPY barconfig.yml /usr/share/nginx/html/barconfig.yml
-
-# Create volume mount points
-VOLUME ["/usr/share/nginx/html/config.yml", "/usr/share/nginx/html/barconfig.yml"]
+# No config files needed as we're using PostgreSQL now
 
 # Expose port 80
 EXPOSE 80
