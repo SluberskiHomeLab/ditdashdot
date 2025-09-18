@@ -163,7 +163,7 @@ app.delete('/api/services/:id', async (req, res) => {
 // Icons routes
 app.get('/api/icons', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM bar_icons ORDER BY display_order');
+    const result = await pool.query('SELECT * FROM icons ORDER BY display_order');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -173,10 +173,10 @@ app.get('/api/icons', async (req, res) => {
 
 app.post('/api/icons', async (req, res) => {
   try {
-    const { name, url, icon_url, display_order } = req.body;
+    const { alt, link, iconUrl, display_order } = req.body;
     const result = await pool.query(
-      'INSERT INTO bar_icons (name, url, icon_url, display_order) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, url, icon_url, display_order]
+      'INSERT INTO icons (alt, link, icon_url, display_order) VALUES ($1, $2, $3, $4) RETURNING *',
+      [alt, link, iconUrl, display_order]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -188,10 +188,10 @@ app.post('/api/icons', async (req, res) => {
 app.put('/api/icons/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, url, icon_url, display_order } = req.body;
+    const { alt, link, iconUrl, display_order } = req.body;
     const result = await pool.query(
-      'UPDATE bar_icons SET name = $1, url = $2, icon_url = $3, display_order = $4 WHERE id = $5 RETURNING *',
-      [name, url, icon_url, display_order, id]
+      'UPDATE icons SET alt = $1, link = $2, icon_url = $3, display_order = $4 WHERE id = $5 RETURNING *',
+      [alt, link, iconUrl, display_order, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -203,7 +203,7 @@ app.put('/api/icons/:id', async (req, res) => {
 app.delete('/api/icons/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM bar_icons WHERE id = $1', [id]);
+    await pool.query('DELETE FROM icons WHERE id = $1', [id]);
     res.json({ message: 'Icon deleted successfully' });
   } catch (err) {
     console.error(err);
