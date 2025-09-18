@@ -1,9 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-const yaml = require('js-yaml');
-const fs = require('fs');
-const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -30,6 +27,11 @@ pool.connect()
   });
 
 // API Routes
+
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'healthy' });
+});
 
 // Settings routes
 app.get('/api/settings', async (req, res) => {
