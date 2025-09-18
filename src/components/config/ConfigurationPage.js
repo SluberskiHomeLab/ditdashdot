@@ -29,13 +29,11 @@ import axios from 'axios';
 
 const API_URL = '/api'; // Using relative URL
 
-const TabPanel = (props) => {
-  const { children, value, index, ...other } = props;
+const TabPanel = ({ children, value, index }) => {
   return (
     <div
       role="tabpanel"
       hidden={value !== index}
-      {...other}
     >
       {value === index && (
         <Box sx={{ p: 3 }}>

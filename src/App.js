@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import ConfigEditor from './components/ConfigEditor';
@@ -84,7 +84,7 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    let intervalId;
+    const intervalRef = { current: null };
 
     const pingServices = async () => {
       const newStatuses = {};
@@ -94,12 +94,15 @@ const Dashboard = () => {
           try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
-            const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
-            clearTimeout(timeoutId);
-            newStatuses[key] = response.ok;
-          } catch {
-            newStatuses[key] = false;
-          }
+            try {
+              const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
+              newStatuses[key] = response.ok;
+            } finally {
+              clearTimeout(timeoutId);
+            }
+            } catch {
+              newStatuses[key] = false;
+            }
         }
       }
       setStatuses(newStatuses);
@@ -107,11 +110,11 @@ const Dashboard = () => {
 
     if (groups.length > 0) {
       pingServices();
-      intervalId = setInterval(pingServices, 60000);
+      intervalRef.current = setInterval(pingServices, 60000);
     }
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [groups]);
 

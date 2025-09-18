@@ -48,8 +48,8 @@ app.put('/api/settings', async (req, res) => {
   try {
     const settings = req.body;
     await pool.query(
-      'UPDATE dashboard_config SET dashboard_title = $1, tab_title = $2, favicon_url = $3, background_url = $4, mode = $5, show_details = $6, font_family = $7, font_size = $8, icon_size = $9',
-      [settings.dashboard_title, settings.tab_title, settings.favicon_url, settings.background_url, settings.mode, settings.show_details, settings.font_family, settings.font_size, settings.icon_size]
+      'UPDATE dashboard_config SET title = $1, tab_title = $2, favicon_url = $3, background_url = $4, mode = $5, show_details = $6, font_family = $7, font_size = $8, icon_size = $9',
+      [settings.title, settings.tab_title, settings.favicon_url, settings.background_url, settings.mode, settings.show_details, settings.font_family, settings.font_size, settings.icon_size]
     );
     res.json({ message: 'Settings updated successfully' });
   } catch (err) {
