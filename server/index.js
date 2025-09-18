@@ -122,10 +122,10 @@ app.get('/api/services', async (req, res) => {
 
 app.post('/api/services', async (req, res) => {
   try {
-    const { name, url, icon_url, group_id, display_order } = req.body;
+    const { name, url, icon_url, group_id, display_order, ip, port } = req.body;
     const result = await pool.query(
-      'INSERT INTO services (name, url, icon_url, group_id, display_order) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, url, icon_url, group_id, display_order]
+      'INSERT INTO services (name, url, icon_url, group_id, display_order, ip, port) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [name, url, icon_url, group_id, display_order, ip, port]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -137,10 +137,10 @@ app.post('/api/services', async (req, res) => {
 app.put('/api/services/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, url, icon_url, group_id, display_order } = req.body;
+    const { name, url, icon_url, group_id, display_order, ip, port } = req.body;
     const result = await pool.query(
-      'UPDATE services SET name = $1, url = $2, icon_url = $3, group_id = $4, display_order = $5 WHERE id = $6 RETURNING *',
-      [name, url, icon_url, group_id, display_order, id]
+      'UPDATE services SET name = $1, url = $2, icon_url = $3, group_id = $4, display_order = $5, ip = $6, port = $7 WHERE id = $8 RETURNING *',
+      [name, url, icon_url, group_id, display_order, ip, port, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
