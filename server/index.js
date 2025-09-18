@@ -71,10 +71,10 @@ app.get('/api/groups', async (req, res) => {
 
 app.post('/api/groups', async (req, res) => {
   try {
-    const { name, display_order } = req.body;
+    const { title, display_order } = req.body;
     const result = await pool.query(
-      'INSERT INTO groups (name, display_order) VALUES ($1, $2) RETURNING *',
-      [name, display_order]
+      'INSERT INTO groups (title, display_order) VALUES ($1, $2) RETURNING *',
+      [title, display_order]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -86,10 +86,10 @@ app.post('/api/groups', async (req, res) => {
 app.put('/api/groups/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, display_order } = req.body;
+    const { title, display_order } = req.body;
     const result = await pool.query(
-      'UPDATE groups SET name = $1, display_order = $2 WHERE id = $3 RETURNING *',
-      [name, display_order, id]
+      'UPDATE groups SET title = $1, display_order = $2 WHERE id = $3 RETURNING *',
+      [title, display_order, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
