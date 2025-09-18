@@ -19,9 +19,6 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
-# Create directory for configuration files
-RUN mkdir -p /usr/share/nginx/html/config
-
 # Copy the build output from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
