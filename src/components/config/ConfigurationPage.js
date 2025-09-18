@@ -133,7 +133,7 @@ const ConfigurationPage = () => {
 
   const handleAdd = (type) => {
     setDialogType(type);
-    setEditingItem({});
+    setEditingItem({ display_order: 0 });  // Set default display_order
     setDialogOpen(true);
   };
 
@@ -164,9 +164,19 @@ const ConfigurationPage = () => {
 
   const handleDialogSave = async () => {
     try {
+      // Validate required fields
+      if (dialogType === 'groups' && (!editingItem.title || editingItem.display_order === undefined)) {
+        setAlert({
+          open: true,
+          message: 'Group name and display order are required',
+          severity: 'error'
+        });
+        return;
+      }
+      
       const endpoint = `${API_URL}/${dialogType}`;
-      const method = editingItem ? 'put' : 'post';
-      const url = editingItem ? `${endpoint}/${editingItem.id}` : endpoint;
+      const method = editingItem.id ? 'put' : 'post';
+      const url = editingItem.id ? `${endpoint}/${editingItem.id}` : endpoint;
 
       await axios[method](url, editingItem);
       setDialogOpen(false);
