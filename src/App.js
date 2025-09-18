@@ -70,7 +70,22 @@ const Dashboard = () => {
           setIconSize(settingsData.icon_size || "32px");
         }
 
-        setGroups(groupsData || []);
+        // Group services by their group_id
+        const groupedServices = {};
+        (servicesData || []).forEach(service => {
+          if (!groupedServices[service.group_id]) {
+            groupedServices[service.group_id] = [];
+          }
+          groupedServices[service.group_id].push(service);
+        });
+
+        // Attach services to their groups
+        const groupsWithServices = (groupsData || []).map(group => ({
+          ...group,
+          services: groupedServices[group.id] || []
+        }));
+
+        setGroups(groupsWithServices);
         setBarIcons(iconsData || []);
         setError(null);
       } catch (err) {
