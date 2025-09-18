@@ -27,7 +27,7 @@ import {
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, DragHandle as DragHandleIcon } from '@mui/icons-material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = '/api';
 
 const ConfigEditor = () => {
   const [settings, setSettings] = useState({});

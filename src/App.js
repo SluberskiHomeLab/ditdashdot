@@ -42,10 +42,10 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const [settingsRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
-          fetch('http://localhost:3001/api/settings'),
-          fetch('http://localhost:3001/api/groups'),
-          fetch('http://localhost:3001/api/services'),
-          fetch('http://localhost:3001/api/icons')
+          fetch('/api/settings'),
+          fetch('/api/groups'),
+          fetch('/api/services'),
+          fetch('/api/icons')
         ]);
 
         const [settingsData, groupsData, servicesData, iconsData] = await Promise.all([
