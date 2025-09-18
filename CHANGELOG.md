@@ -2,6 +2,22 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
+## [B2.0.1] - 2025-09-18
+
+### Fixed
+- Fixed syntax errors in ConfigurationPage.js causing build failures
+- Fixed ESLint warnings in React components:
+  - Removed unused props spread in TabPanel component
+  - Improved interval management using useRef
+  - Enhanced timeout cleanup in service ping functionality
+  - Added proper error handling for fetch requests
+- Fixed API endpoint issues:
+  - Corrected column name mismatch between frontend and backend for settings
+  - Aligned group API field names with database schema
+  - Added proper error handling and response messages
+- Improved React component cleanup and memory management
+- Enhanced error handling in configuration interface
+
 ## [B2.0.0] - 2025-09-18
 
 ### Added
