@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import yaml from 'js-yaml';
 import ServiceCard from './components/ServiceCard';
-import ConfigurationPage from './components/config/ConfigurationPage';
+import ConfigEditor from './components/ConfigEditor';
 
 const Dashboard = () => {
   const [groups, setGroups] = useState([]);
