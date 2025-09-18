@@ -12,7 +12,8 @@
     "@mui/icons-material": "^5.14.10",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "axios": "^1.5.0"
+    "axios": "^1.5.0",
+    "react-beautiful-dnd": "^13.1.1"
   },
   "scripts": {
     "start": "react-scripts start",
