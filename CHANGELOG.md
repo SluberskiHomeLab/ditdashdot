@@ -2,6 +2,18 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
+## [B2.0.2] - 2025-09-18
+
+### Added
+- Bar Icons management through configuration UI
+- Support for configurable icon shortcuts under search bar
+- Field validation and error handling for icon management
+
+### Fixed
+- Resolved field name mismatches between frontend and database for bar icons
+- Fixed icon URL persistence in configuration interface
+- Added proper data transformation in API responses for consistent field naming
+
 ## [B2.0.1] - 2025-09-18
 
 ### Fixed
