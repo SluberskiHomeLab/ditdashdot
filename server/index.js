@@ -164,7 +164,15 @@ app.delete('/api/services/:id', async (req, res) => {
 app.get('/api/icons', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM bar_icons ORDER BY display_order');
-    res.json(result.rows);
+    // Transform the response to match frontend field names
+    const transformedRows = result.rows.map(row => ({
+      id: row.id,
+      iconUrl: row.icon_url,
+      link: row.link,
+      alt: row.alt,
+      display_order: row.display_order
+    }));
+    res.json(transformedRows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -178,7 +186,15 @@ app.post('/api/icons', async (req, res) => {
       'INSERT INTO bar_icons (alt, link, icon_url, display_order) VALUES ($1, $2, $3, $4) RETURNING *',
       [alt, link, iconUrl, display_order]
     );
-    res.json(result.rows[0]);
+    // Transform the response to match frontend field names
+    const transformedRow = {
+      id: result.rows[0].id,
+      iconUrl: result.rows[0].icon_url,
+      link: result.rows[0].link,
+      alt: result.rows[0].alt,
+      display_order: result.rows[0].display_order
+    };
+    res.json(transformedRow);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -193,7 +209,15 @@ app.put('/api/icons/:id', async (req, res) => {
       'UPDATE bar_icons SET alt = $1, link = $2, icon_url = $3, display_order = $4 WHERE id = $5 RETURNING *',
       [alt, link, iconUrl, display_order, id]
     );
-    res.json(result.rows[0]);
+    // Transform the response to match frontend field names
+    const transformedRow = {
+      id: result.rows[0].id,
+      iconUrl: result.rows[0].icon_url,
+      link: result.rows[0].link,
+      alt: result.rows[0].alt,
+      display_order: result.rows[0].display_order
+    };
+    res.json(transformedRow);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
