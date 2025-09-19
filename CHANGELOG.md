@@ -2,19 +2,35 @@
 
 All notable changes to DitDashDot will be documented in this file.
 
-## [B2.0.2] - 2025-09-18
+## [B2.0.0] - 2025-09-18
 
 ### Added
+- PostgreSQL database backend for storing configuration
+- Web-based configuration interface at /config endpoint
+- RESTful API for managing dashboard settings
+- Material-UI based configuration GUI
+- Real-time configuration updates
+- Docker Compose setup with database and API services
 - Bar Icons management through configuration UI
 - Support for configurable icon shortcuts under search bar
 - Field validation and error handling for icon management
 
 ### Fixed
+- Fixed syntax errors in ConfigurationPage.js causing build failures
+- Fixed ESLint warnings in React components:
+  - Removed unused props spread in TabPanel component
+  - Improved interval management using useRef
+  - Enhanced timeout cleanup in service ping functionality
+  - Added proper error handling for fetch requests
+- Fixed API endpoint issues:
+  - Corrected column name mismatch between frontend and backend for settings
+  - Aligned group API field names with database schema
+  - Added proper error handling and response messages
+- Improved React component cleanup and memory management
+- Enhanced error handling in configuration interface
 - Resolved field name mismatches between frontend and database for bar icons
 - Fixed icon URL persistence in configuration interface
 - Added proper data transformation in API responses for consistent field naming
-
-## [B2.0.1] - 2025-09-18
 
 ### Fixed
 - Fixed syntax errors in ConfigurationPage.js causing build failures
