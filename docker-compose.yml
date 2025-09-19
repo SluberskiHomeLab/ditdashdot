@@ -1,6 +1,6 @@
 services:
   dashboard:
-    image: sluberskihomelab/ditdashdot-dashboard:2.0
+    image: sluberskihomelab/ditdashdot-dashboard:latest
     ports:
       - "80:80"
     volumes:
@@ -13,7 +13,7 @@ services:
     restart: always
 
   api:
-    image: sluberskihomelab/ditdashdot-api:2.0
+    image: sluberskihomelab/ditdashdot-api:latest
     ports:
       - "3001:3001"
     environment:
