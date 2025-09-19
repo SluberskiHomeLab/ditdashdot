@@ -4,138 +4,139 @@
 
 **DitDashDot** is a simple, clean, and easy-to-configure services dashboard designed specifically for homelabs. Built with React.js and containerized with Docker, it provides a central hub to view and manage your homelab services.
 
-*Release 1.2 is out now with changes.  Changelog can be found in the release notes*
+*Version 2.0.0 is out now with major improvements! See the [CHANGELOG.md](CHANGELOG.md) for details.*
+
 ## Features
 
+### Core Features
 - Simple and intuitive dashboard interface
-- Built with React.js for a fast and modern web experience
-- Runs in Docker for easy deployment and management
-- Clean design focused on usability
-- Easily configurable to fit your homelab setup
-- Simple yaml configuration
-- Integrated Service pings
-- Service_Mode theme for ping visibility
-- Dark mode support
-- Quick access icons
+- Clean, modern design focused on usability
+- Real-time service status monitoring
+- Fully web-based configuration interface
+- PostgreSQL database for reliable configuration storage
+
+### Dashboard Features
+- Group services into logical categories
+- Customizable service cards with icons
+- Quick access bar for frequently used links
+- Real-time service health status
+- Search functionality for quick service access
+
+### Configuration Features
+- Web-based configuration interface at /config
+- Live preview of changes
+- Group management
+- Service configuration
+- Quick access icon management
+- Theme customization
+
+### Appearance Options
+- Multiple theme modes:
+  - Light Mode
+  - Dark Mode
+  - Transparent Light
+  - Transparent Dark
+  - Service Status Mode
+- Customizable fonts and sizes
+- Custom background support
+- Configurable favicon and page titles
 
 ## Getting Started
 
 ### Prerequisites
 
 - [Docker](https://www.docker.com/) installed on your host machine
-- [Docker Compose](https://docs.docker.com/compose/) 
+- [Docker Compose](https://docs.docker.com/compose/) v2 or higher
 
-### Installation Options
+### Quick Start
 
-#### Using Docker Compose (Recommended)
-
-1. Clone the repository:
+1. Create a new directory for your dashboard:
    ```bash
-   git clone https://github.com/SluberskiHomeLab/ditdashdot.git
+   mkdir ditdashdot
    cd ditdashdot
    ```
-   
-2. Start the service:
+
+2. Create a `docker-compose.yml` file:
    ```bash
-   docker-compose up -d
+   curl -O https://raw.githubusercontent.com/SluberskiHomeLab/ditdashdot/main/docker-compose.yml
    ```
 
+3. Start the services:
+   ```bash
+   docker compose up -d
+   ```
 
-After installation, open your browser and navigate to `http://localhost:80` to view your dashboard.
+This will start three services:
+- Frontend Dashboard (accessible at http://localhost:80)
+- Backend API Server
+- PostgreSQL Database
+
+4. Access your dashboard:
+   - Main dashboard: http://localhost:80
+   - Configuration interface: http://localhost:80/config
+
+### Advanced Installation
+
+For development or custom deployments, you can clone the repository:
+
+```bash
+git clone https://github.com/SluberskiHomeLab/ditdashdot.git
+cd ditdashdot
+docker compose up -d
+```
 
 ## Configuration
 
-Configuration is designed to be straightforward. 
+DitDashDot features a comprehensive web-based configuration interface that makes it easy to manage your dashboard settings.
 
-#### config
+### Using the Configuration Interface
 
-Config.yml is the primary configuration file for the dashboard.  This is where the services configuration is layed out.  I have included a sample config.yml file in this repo. 
-\
-BarConfig.yml is the configuration file for the small quick access icons below the search bar.  I have also included a sample of this file.
-\
-By default, DitDashDot looks for the config.yml and barconfig.yml in jthe root of the project folder that the docker compose file is in.  
-\
-There are several customization options available in the config.yml to make your dashboard exactly how you want it.  
+Access the configuration interface at `http://localhost:80/config`. The interface is divided into several sections:
 
-##### Appearance Settings
-You can customize the appearance of your dashboard using these settings:
-```yml
-font_family: "Arial, sans-serif" # Custom font for the dashboard
-font_size: "14px"               # Base font size for text
-icon_size: "32px"              # Size of service icons
-```
+#### General Settings
+- Dashboard title and browser tab title
+- Favicon URL
+- Theme selection
+- Font settings
+- Background customization
 
-##### Title and Browser Settings
-You can customize both the dashboard title and browser-specific elements:
-```yml
-# Dashboard title shown at the top of the page
-title: Homelab Dashboard
+#### Groups Management
+- Create and organize service groups
+- Set group display order
+- Edit or remove existing groups
 
-# Browser tab title
-tab_title: "My Homelab Dashboard"
+#### Services Management
+- Add services with URLs and icons
+- Assign services to groups
+- Configure service monitoring
+- Set service display order
 
-# Custom favicon URL
-favicon_url: "https://example.com/favicon.ico"
-```
+#### Quick Access Icons
+- Add frequently used links to the top bar
+- Upload custom icons
+- Set icon order and appearance
 
-##### Theme
-DitDashDot has 4 themes to choose from. This should give you a bit of freedom with color combos and readability.
+### Data Persistence
 
-```yml
-mode: dark_mode # Cards are dark grey, Text is white
-```
-```yml
-mode: light_mode # Cards are white, Text is black
-```
-```yml
-mode: trans_light # Cards are transparent, Text is black
-```
-```yml
-mode: trans_dark # Cards are transparent, Text is white
-```
-```yml
-mode: service_mode # Cards change color based on if the service is reachable by the dashboard
-```
+All configuration is stored in a PostgreSQL database, providing:
+- Persistent storage across restarts
+- Automatic backups with Docker volumes
+- Data integrity and reliability
+- Change history tracking
+
+### Initial Setup
+
+When first starting the application, the database is initialized with default settings. Use the configuration interface to customize your dashboard according to your needs. All changes are applied in real-time and automatically persisted.
 
 ##### Show Details
 Show Details will either show or hide information like ip address and port on the card.
 
-```yml
-show_details: true #This will show ip address and port on the card
-```
-```yml
-show_details: false #This will hide the ip address and port on the card
-```
-
 ##### Background URL
 Changing the Background URL will set the picture of the Dashboard background.  By default, it will be grey.  I have tested this with links to .jpg and .png images so far.
 
-```yml
-background_url: https://your-image-url.com/background.jpg # Set this to any image url Currently supports png and jpg
-```
 ##### Groups
 Groups are Separate sections intended to improve organization.  Each group that is listed is horizontal and has a centered title
 
-Example of a service within a group with a title:
-```yml
-groups: # each group will be a separate vertical section in the dashboard
-  - title: Home Automation
-    services:
-      - iconUrl: https://www.home-assistant.io/images/favicon.ico
-        ip: 192.168.1.10
-        name: Home Assistant
-        port: 8123
-        url: http://192.168.1.10:8123
-```
-
-##### barconfig.yml
-Barconfig.yml is the config for your quick access icons.  You can configure these to your hearts desire.  I do not reccomend putting more than about 10 for sizing reasons.
-
-```yml
-  - iconUrl: https://cdn.jsdelivr.net/gh/selfhst/icons/png/github.png # URL to the icon you wish to display
-    link: https://github.com/SluberskiHomelab # Link that clicking on the icon goes to
-    alt: GitHub # Service name.  will display when hovering over the icon.
-```
 
 #### Additional notes
 
@@ -143,10 +144,44 @@ Barconfig.yml is the config for your quick access icons.  You can configure thes
 
 ## Technologies Used
 
-- JavaScript (React.js)
-- Docker
-- HTML
-- yaml
+- Frontend:
+  - React.js
+  - Material-UI
+  - React Router
+
+- Backend:
+  - Node.js/Express
+  - PostgreSQL
+  - RESTful API
+
+- Infrastructure:
+  - Docker
+  - Docker Compose
+  - Nginx
+
+## Development
+
+To work on DitDashDot locally:
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   # Install frontend dependencies
+   npm install
+
+   # Install backend dependencies
+   cd server
+   npm install
+   ```
+
+3. Start the development environment:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+4. Make your changes
+5. Test thoroughly
+6. Submit a pull request
 
 ## Contributing
 
