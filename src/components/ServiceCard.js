@@ -1,7 +1,7 @@
 import React from 'react';
 
 const ServiceCard = ({ 
-  service, 
+  service: { name, url, icon_url, ip, port }, 
   showDetails = true, 
   mode = "light_mode", 
   status,
@@ -40,7 +40,7 @@ const ServiceCard = ({
 
   return (
     <button
-      onClick={() => window.open(service.url, '_blank', 'noopener,noreferrer')}
+      onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
       style={{
         background,
         color,
@@ -50,47 +50,30 @@ const ServiceCard = ({
         minWidth: '220px',
         maxWidth: '250px',
         textAlign: 'center',
-        position: 'relative',
         border: 'none',
         cursor: 'pointer',
-        transition: 'box-shadow 0.2s',
-        outline: 'none',
-        fontFamily: fontFamily,
-        fontSize: fontSize
+        fontFamily,
+        fontSize,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px'
       }}
-      title={`Open ${service.name}`}
     >
-      {/* Remove dot for service_mode */}
-      {mode !== "service_mode" && (
-        <div style={{ position: 'absolute', top: '15px', left: '15px' }}>
-          <span
-            style={{
-              display: 'inline-block',
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              background: status === undefined ? '#bbb' : status ? '#82ff82ff' : '#ff5959ff',
-              border: '1px solid #888'
-            }}
-            title={status === undefined ? "Checking..." : status ? "Online" : "Unreachable"}
-          />
-        </div>
+      {icon_url && (
+        <img 
+          src={icon_url} 
+          alt={name}
+          style={{
+            width: iconSize,
+            height: iconSize,
+            objectFit: 'contain'
+          }}
+        />
       )}
-      <img
-        src={service.iconUrl}
-        alt={service.name}
-        style={{ width: iconSize, height: iconSize, marginBottom: '10px' }}
-      />
-      <h2 style={{ fontSize: '1.2em', margin: '10px 0' }}>{service.name}</h2>
+      <div>{name}</div>
       {showDetails && (
-        <div style={{ marginTop: '10px', fontSize: '0.95em' }}>
-          <div>
-            <strong>IP:</strong> {service.ip}
-          </div>
-          <div>
-            <strong>Port:</strong> {service.port}
-          </div>
-        </div>
+        <div style={{ fontSize: '0.8em', opacity: 0.8 }}>{ip}:{port}</div>
       )}
     </button>
   );

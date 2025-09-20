@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import yaml from 'js-yaml';
+import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
+import ConfigEditor from './components/ConfigEditor';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import ConfigurationPage from './components/config/ConfigurationPage';
 
-const App = () => {
+const Dashboard = () => {
   const [groups, setGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
@@ -32,45 +35,71 @@ const App = () => {
     }
   }, [tabTitle, faviconUrl]);
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
-        const response = await fetch('/config.yml');
-        const text = await response.text();
-        const data = yaml.load(text);
-        if (data.title) setDashboardTitle(data.title);
-        if (data.tab_title) setTabTitle(data.tab_title);
-        if (data.favicon_url) setFaviconUrl(data.favicon_url);
-        if (data.groups) setGroups(data.groups);
-        if (data.mode) setMode(data.mode);
-        if (typeof data.show_details === "boolean") setShowDetails(data.show_details);
-        if (data.background_url) setBackgroundUrl(data.background_url);
-        if (data.font_family) setFontFamily(data.font_family);
-        if (data.font_size) setFontSize(data.font_size);
-        if (data.icon_size) setIconSize(data.icon_size);
+        setLoading(true);
+        const [settingsRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
+          fetch('/api/settings'),
+          fetch('/api/groups'),
+          fetch('/api/services'),
+          fetch('/api/icons')
+        ]);
+
+        const [settingsData, groupsData, servicesData, iconsData] = await Promise.all([
+          settingsRes.json(),
+          groupsRes.json(),
+          servicesRes.json(),
+          iconsRes.json()
+        ]);
+
+        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData });
+
+        if (settingsData) {
+          setDashboardTitle(settingsData.title || "Homelab Dashboard");
+          setTabTitle(settingsData.tab_title || "Homelab Dashboard");
+          setFaviconUrl(settingsData.favicon_url || "");
+          setMode(settingsData.mode || "light_mode");
+          setShowDetails(settingsData.show_details !== false);
+          setBackgroundUrl(settingsData.background_url || "");
+          setFontFamily(settingsData.font_family || "Arial, sans-serif");
+          setFontSize(settingsData.font_size || "14px");
+          setIconSize(settingsData.icon_size || "32px");
+        }
+
+        // Group services by their group_id
+        const groupedServices = {};
+        (servicesData || []).forEach(service => {
+          if (!groupedServices[service.group_id]) {
+            groupedServices[service.group_id] = [];
+          }
+          groupedServices[service.group_id].push(service);
+        });
+
+        // Attach services to their groups
+        const groupsWithServices = (groupsData || []).map(group => ({
+          ...group,
+          services: groupedServices[group.id] || []
+        }));
+
+        setGroups(groupsWithServices);
+        setBarIcons(iconsData || []);
+        setError(null);
       } catch (err) {
-        console.error("Failed to load config.yml:", err);
+        console.error("Failed to load configuration:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
     loadConfig();
   }, []);
 
   useEffect(() => {
-    const loadBarConfig = async () => {
-      try {
-        const response = await fetch('/barconfig.yml');
-        const text = await response.text();
-        const data = yaml.load(text);
-        if (Array.isArray(data.icons)) setBarIcons(data.icons);
-      } catch (err) {
-        // If barconfig.yml doesn't exist, just ignore
-      }
-    };
-    loadBarConfig();
-  }, []);
-
-  useEffect(() => {
-    let intervalId;
+    const intervalRef = { current: null };
 
     const pingServices = async () => {
       const newStatuses = {};
@@ -80,12 +109,15 @@ const App = () => {
           try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
-            const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
-            clearTimeout(timeoutId);
-            newStatuses[key] = response.ok;
-          } catch {
-            newStatuses[key] = false;
-          }
+            try {
+              const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
+              newStatuses[key] = response.ok;
+            } finally {
+              clearTimeout(timeoutId);
+            }
+            } catch {
+              newStatuses[key] = false;
+            }
         }
       }
       setStatuses(newStatuses);
@@ -93,11 +125,11 @@ const App = () => {
 
     if (groups.length > 0) {
       pingServices();
-      intervalId = setInterval(pingServices, 60000);
+      intervalRef.current = setInterval(pingServices, 60000);
     }
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [groups]);
 
@@ -201,6 +233,17 @@ const App = () => {
         Created by SluberskiHomelab on GitHub
       </div>
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/config" element={<ConfigurationPage />} />
+      </Routes>
+    </Router>
   );
 };
 

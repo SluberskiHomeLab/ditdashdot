@@ -1,10 +1,42 @@
 services:
   dashboard:
-    image: sluberskihomelab/ditdashdot:latest
+    image: sluberskihomelab/ditdashdot-dashboard:latest
     ports:
       - "80:80"
     volumes:
-      - ./config.yml:/usr/share/nginx/html/config.yml
       - ./background.jpg:/usr/share/nginx/html/background.jpg
-      - ./barconfig.yml:/usr/share/nginx/html/barconfig.yml
+    environment:
+      - API_URL=http://api:3001
+    depends_on:
+      - api
+      - db
     restart: always
+
+  api:
+    image: sluberskihomelab/ditdashdot-api:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - POSTGRES_USER=ditdashdot
+      - POSTGRES_PASSWORD=ditdashdot
+      - POSTGRES_DB=ditdashdot
+      - POSTGRES_HOST=db
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=ditdashdot
+      - POSTGRES_PASSWORD=ditdashdot
+      - POSTGRES_DB=ditdashdot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    restart: always
+
+volumes:
+  postgres_data:
