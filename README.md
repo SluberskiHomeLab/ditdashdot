@@ -6,6 +6,8 @@
 
 *Version 2.0.0 is out now with major improvements! See the [CHANGELOG.md](CHANGELOG.md) for details.*
 
+*Partially Vibe-Coded*
+
 ## Features
 
 ### Core Features
