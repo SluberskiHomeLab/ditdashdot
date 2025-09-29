@@ -24,7 +24,8 @@ import {
   DialogActions,
   Divider
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Home as HomeIcon } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = '/api'; // Using relative URL
@@ -174,11 +175,19 @@ const ConfigurationPage = () => {
         return;
       }
       
+      // Log the data being sent
+      console.log('Saving item:', {
+        type: dialogType,
+        data: editingItem
+      });
+      
       const endpoint = `${API_URL}/${dialogType}`;
       const method = editingItem.id ? 'put' : 'post';
       const url = editingItem.id ? `${endpoint}/${editingItem.id}` : endpoint;
 
-      await axios[method](url, editingItem);
+      const response = await axios[method](url, editingItem);
+      console.log('Server response:', response.data);
+      
       setDialogOpen(false);
       fetchData();
       setAlert({
@@ -188,9 +197,10 @@ const ConfigurationPage = () => {
       });
     } catch (error) {
       console.error('Error saving item:', error);
+      console.error('Error details:', error.response?.data || error.message);
       setAlert({
         open: true,
-        message: 'Error saving item',
+        message: error.response?.data?.error || 'Error saving item',
         severity: 'error'
       });
     }
@@ -198,7 +208,23 @@ const ConfigurationPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, position: 'relative' }}>
+        <Link to="/" style={{ 
+          position: 'absolute',
+          right: '20px',
+          top: '20px',
+          textDecoration: 'none'
+        }}>
+          <IconButton 
+            style={{ 
+              color: 'inherit',
+              padding: '8px'
+            }}
+            title="Return to dashboard"
+          >
+            <HomeIcon />
+          </IconButton>
+        </Link>
         <Typography variant="h4" gutterBottom>
           Dashboard Configuration
         </Typography>
@@ -353,7 +379,7 @@ const ConfigurationPage = () => {
               <ListItem key={service.id}>
                 <ListItemText 
                   primary={service.name}
-                  secondary={`${service.url} (${service.ip}:${service.port})`}
+                  secondary={service.ip && service.port ? `${service.url} (${service.ip}:${service.port})` : service.url}
                 />
                 <ListItemSecondaryAction>
                   <IconButton onClick={() => handleEdit('services', service)}>
@@ -460,18 +486,18 @@ const ConfigurationPage = () => {
                   sx={{ mb: 2 }}
                 />
                 <TextField
-                  label="IP Address"
+                  label="IP Address (optional)"
                   fullWidth
-                  value={editingItem?.ip || ''}
-                  onChange={(e) => setEditingItem(prev => ({ ...prev, ip: e.target.value }))}
+                  value={editingItem?.ip ?? ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, ip: e.target.value || null }))}
                   sx={{ mb: 2 }}
                 />
                 <TextField
-                  label="Port"
+                  label="Port (optional)"
                   type="number"
                   fullWidth
-                  value={editingItem?.port || ''}
-                  onChange={(e) => setEditingItem(prev => ({ ...prev, port: parseInt(e.target.value, 10) }))}
+                  value={editingItem?.port ?? ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, port: e.target.value ? parseInt(e.target.value, 10) : null }))}
                   sx={{ mb: 2 }}
                 />
                 <TextField
