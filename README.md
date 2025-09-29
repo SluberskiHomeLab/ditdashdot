@@ -4,7 +4,7 @@
 
 **DitDashDot** is a simple, clean, and easy-to-configure services dashboard designed specifically for homelabs. Built with React.js and containerized with Docker, it provides a central hub to view and manage your homelab services.
 
-*Version 2.0.0 is out now with major improvements! See the [CHANGELOG.md](CHANGELOG.md) for details.*
+*Version 2.1.0 is out now with major improvements! *
 
 *Partially Vibe-Coded*
 
