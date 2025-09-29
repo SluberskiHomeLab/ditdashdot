@@ -1,8 +1,6 @@
 services:
   dashboard:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: sluberskihomelab/ditdashdot-dashboard:latest
     ports:
       - "80:80"
     volumes:
@@ -15,9 +13,7 @@ services:
     restart: always
 
   api:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
+    image: sluberskihomelab/ditdashdot-api:latest
     ports:
       - "3001:3001"
     environment:
