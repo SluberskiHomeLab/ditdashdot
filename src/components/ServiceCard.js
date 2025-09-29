@@ -72,7 +72,7 @@ const ServiceCard = ({
         />
       )}
       <div>{name}</div>
-      {showDetails && (
+      {showDetails && ip && port && (
         <div style={{ fontSize: '0.8em', opacity: 0.8 }}>{ip}:{port}</div>
       )}
     </button>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import ConfigEditor from './components/ConfigEditor';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, IconButton } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ConfigurationPage from './components/config/ConfigurationPage';
 
 const Dashboard = () => {
@@ -156,8 +157,30 @@ const Dashboard = () => {
 
   return (
     <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles, position: 'relative' }}>
-      <div style={{ backgroundColor: 'transparent', padding: '10px', textAlign: 'center', color: themeStyles.color }}>
+      <div style={{ backgroundColor: 'transparent', padding: '10px', textAlign: 'center', color: themeStyles.color, position: 'relative' }}>
         <h1 style={{ margin: 0 }}>{dashboardTitle}</h1>
+        <Link to="/config" style={{ 
+          position: 'absolute', 
+          right: '20px', 
+          top: '50%', 
+          transform: 'translateY(-50%)',
+          textDecoration: 'none'
+        }}>
+          <IconButton 
+            style={{ 
+              color: themeStyles.color,
+              width: iconSize,
+              height: iconSize,
+              padding: '8px'
+            }} 
+            title="Edit config"
+          >
+            <SettingsIcon style={{ 
+              width: '100%', 
+              height: '100%' 
+            }} />
+          </IconButton>
+        </Link>
       </div>
       <div style={{ textAlign: 'center', margin: '5px 0', color: themeStyles.color }}>
         <input

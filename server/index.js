@@ -122,30 +122,68 @@ app.get('/api/services', async (req, res) => {
 
 app.post('/api/services', async (req, res) => {
   try {
+    console.log('Received service creation request:', req.body);
     const { name, url, icon_url, group_id, display_order, ip, port } = req.body;
+    
+    // Validate required fields
+    if (!name || !url || !group_id) {
+      console.log('Validation failed:', { name, url, group_id });
+      return res.status(400).json({ error: 'Name, URL, and Group are required' });
+    }
+
+    // Ensure display_order is a number
+    const orderValue = display_order || 0;
+
     const result = await pool.query(
       'INSERT INTO services (name, url, icon_url, group_id, display_order, ip, port) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [name, url, icon_url, group_id, display_order, ip, port]
+      [name, url, icon_url || null, group_id, orderValue, ip || null, port ? Number(port) : null]
     );
+    console.log('Service created successfully:', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error creating service:', err);
+    if (err.code === '23503') {
+      res.status(400).json({ error: 'Invalid group ID' });
+    } else {
+      res.status(500).json({ error: `Database error: ${err.message}` });
+    }
   }
 });
 
 app.put('/api/services/:id', async (req, res) => {
   try {
+    console.log('Received service update request:', { id: req.params.id, body: req.body });
     const { id } = req.params;
     const { name, url, icon_url, group_id, display_order, ip, port } = req.body;
+    
+    // Validate required fields
+    if (!name || !url || !group_id) {
+      console.log('Validation failed:', { name, url, group_id });
+      return res.status(400).json({ error: 'Name, URL, and Group are required' });
+    }
+
+    // Ensure display_order is a number
+    const orderValue = display_order || 0;
+
     const result = await pool.query(
       'UPDATE services SET name = $1, url = $2, icon_url = $3, group_id = $4, display_order = $5, ip = $6, port = $7 WHERE id = $8 RETURNING *',
-      [name, url, icon_url, group_id, display_order, ip, port, id]
+      [name, url, icon_url || null, group_id, orderValue, ip || null, port ? Number(port) : null, id]
     );
+
+    if (result.rows.length === 0) {
+      console.log('Service not found:', id);
+      return res.status(404).json({ error: 'Service not found' });
+    }
+
+    console.log('Service updated successfully:', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error updating service:', err);
+    if (err.code === '23503') {
+      res.status(400).json({ error: 'Invalid group ID' });
+    } else {
+      res.status(500).json({ error: `Database error: ${err.message}` });
+    }
   }
 });
 
