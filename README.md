@@ -8,6 +8,8 @@
 
 *Partially Vibe-Coded*
 
+Images at: [ditdashdot/images](https://github.com/SluberskiHomeLab/ditdashdot/tree/main/images)
+
 ## Features
 
 ### Core Features
@@ -75,7 +77,7 @@ This will start three services:
 
 4. Access your dashboard:
    - Main dashboard: http://localhost:80
-   - Configuration interface: http://localhost:80/config
+   - Configuration interface: http://localhost:80/config (Configuration Interface can be accessed by clicking the settings cog in top right)
 
 ### Advanced Installation
 
