@@ -401,6 +401,60 @@ app.delete('/api/pages/:id', async (req, res) => {
   }
 });
 
+// Service status check endpoint
+app.post('/api/ping', async (req, res) => {
+  try {
+    const { services } = req.body;
+    const results = {};
+    
+    // Use Promise.allSettled to ping all services concurrently
+    const pingPromises = services.map(async (service) => {
+      if (!service.ip || !service.port) {
+        return { key: `${service.id}`, status: null }; // No IP/port to ping
+      }
+      
+      const key = `${service.ip}:${service.port}`;
+      const net = require('net');
+      
+      return new Promise((resolve) => {
+        const socket = new net.Socket();
+        const timeout = 3000;
+        
+        socket.setTimeout(timeout);
+        socket.on('connect', () => {
+          socket.destroy();
+          resolve({ key, status: true });
+        });
+        
+        socket.on('timeout', () => {
+          socket.destroy();
+          resolve({ key, status: false });
+        });
+        
+        socket.on('error', () => {
+          socket.destroy();
+          resolve({ key, status: false });
+        });
+        
+        socket.connect(service.port, service.ip);
+      });
+    });
+    
+    const pingResults = await Promise.allSettled(pingPromises);
+    
+    pingResults.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value.key) {
+        results[result.value.key] = result.value.status;
+      }
+    });
+    
+    res.json(results);
+  } catch (err) {
+    console.error('Error in ping endpoint:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

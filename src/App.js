@@ -135,25 +135,40 @@ const Dashboard = () => {
     const intervalRef = { current: null };
 
     const pingServices = async () => {
-      const newStatuses = {};
-      for (const group of groups) {
-        for (const service of group.services || []) {
-          const key = `${service.ip}:${service.port}`;
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            try {
-              const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
-              newStatuses[key] = response.ok;
-            } finally {
-              clearTimeout(timeoutId);
+      try {
+        // Collect all services that have IP and port
+        const servicesToPing = [];
+        for (const group of groups) {
+          for (const service of group.services || []) {
+            if (service.ip && service.port) {
+              servicesToPing.push(service);
             }
-            } catch {
-              newStatuses[key] = false;
-            }
+          }
         }
+
+        if (servicesToPing.length === 0) {
+          setStatuses({});
+          return;
+        }
+
+        // Use server-side ping endpoint
+        const response = await fetch('/api/ping', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ services: servicesToPing }),
+        });
+
+        if (response.ok) {
+          const results = await response.json();
+          setStatuses(results);
+        } else {
+          console.error('Failed to ping services:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error pinging services:', error);
       }
-      setStatuses(newStatuses);
     };
 
     if (groups.length > 0) {
