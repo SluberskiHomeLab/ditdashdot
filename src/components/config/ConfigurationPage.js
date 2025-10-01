@@ -58,6 +58,7 @@ const ConfigurationPage = () => {
     font_size: '14px',
     icon_size: '32px'
   });
+  const [pages, setPages] = useState([]);
   const [groups, setGroups] = useState([]);
   const [services, setServices] = useState([]);
   const [icons, setIcons] = useState([]);
@@ -72,14 +73,16 @@ const ConfigurationPage = () => {
 
   const fetchData = async () => {
     try {
-      const [settingsRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
+      const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes] = await Promise.all([
         axios.get(`${API_URL}/settings`),
         axios.get(`${API_URL}/groups`),
         axios.get(`${API_URL}/services`),
-        axios.get(`${API_URL}/icons`)
+        axios.get(`${API_URL}/icons`),
+        axios.get(`${API_URL}/pages`)
       ]);
 
       setSettings(settingsRes.data || {});
+      setPages(pagesRes.data || []);
       setGroups(groupsRes.data || []);
       setServices(servicesRes.data || []);
       setIcons(iconsRes.data || []);
@@ -134,7 +137,14 @@ const ConfigurationPage = () => {
 
   const handleAdd = (type) => {
     setDialogType(type);
-    setEditingItem({ display_order: 0 });  // Set default display_order
+    const newItem = { display_order: 0 };
+    
+    // Set default page_id for groups if pages exist
+    if (type === 'groups' && pages.length > 0) {
+      newItem.page_id = pages[0].id;
+    }
+    
+    setEditingItem(newItem);
     setDialogOpen(true);
   };
 
@@ -166,10 +176,19 @@ const ConfigurationPage = () => {
   const handleDialogSave = async () => {
     try {
       // Validate required fields
-      if (dialogType === 'groups' && (!editingItem.title || editingItem.display_order === undefined)) {
+      if (dialogType === 'groups' && (!editingItem.title || !editingItem.page_id)) {
         setAlert({
           open: true,
-          message: 'Group name and display order are required',
+          message: 'Group name and page are required',
+          severity: 'error'
+        });
+        return;
+      }
+      
+      if (dialogType === 'pages' && !editingItem.title) {
+        setAlert({
+          open: true,
+          message: 'Page title is required',
           severity: 'error'
         });
         return;
@@ -232,6 +251,7 @@ const ConfigurationPage = () => {
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs value={tabValue} onChange={handleTabChange}>
             <Tab label="General Settings" />
+            <Tab label="Pages" />
             <Tab label="Groups" />
             <Tab label="Services" />
             <Tab label="Icons" />
@@ -340,22 +360,23 @@ const ConfigurationPage = () => {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => handleAdd('groups')}
+              onClick={() => handleAdd('pages')}
             >
-              Add Group
+              Add Page
             </Button>
           </Box>
           <List>
-            {groups.map((group) => (
-              <ListItem key={group.id}>
+            {pages.map((page) => (
+              <ListItem key={page.id}>
                 <ListItemText 
-                  primary={group.title}
+                  primary={page.title}
+                  secondary={`Display Order: ${page.display_order}`}
                 />
                 <ListItemSecondaryAction>
-                  <IconButton onClick={() => handleEdit('groups', group)}>
+                  <IconButton onClick={() => handleEdit('pages', page)}>
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete('groups', group.id)}>
+                  <IconButton onClick={() => handleDelete('pages', page.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
@@ -365,6 +386,39 @@ const ConfigurationPage = () => {
         </TabPanel>
 
         <TabPanel value={tabValue} index={2}>
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleAdd('groups')}
+            >
+              Add Group
+            </Button>
+          </Box>
+          <List>
+            {groups.map((group) => {
+              const page = pages.find(p => p.id === group.page_id);
+              return (
+                <ListItem key={group.id}>
+                  <ListItemText 
+                    primary={group.title}
+                    secondary={page ? `Page: ${page.title}` : 'No page assigned'}
+                  />
+                  <ListItemSecondaryAction>
+                    <IconButton onClick={() => handleEdit('groups', group)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDelete('groups', group.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              );
+            })}
+          </List>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={3}>
           <Box sx={{ mb: 2 }}>
             <Button
               variant="contained"
@@ -394,7 +448,7 @@ const ConfigurationPage = () => {
           </List>
         </TabPanel>
 
-        <TabPanel value={tabValue} index={3}>
+        <TabPanel value={tabValue} index={4}>
           <Box sx={{ mb: 2 }}>
             <Button
               variant="contained"
@@ -442,6 +496,25 @@ const ConfigurationPage = () => {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
+            {dialogType === 'pages' && (
+              <>
+                <TextField
+                  autoFocus
+                  label="Page Title"
+                  fullWidth
+                  value={editingItem?.title || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, title: e.target.value }))}
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Display Order"
+                  type="number"
+                  fullWidth
+                  value={editingItem?.display_order || 0}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, display_order: parseInt(e.target.value, 10) }))}
+                />
+              </>
+            )}
             {dialogType === 'groups' && (
               <>
                 <TextField
@@ -452,6 +525,20 @@ const ConfigurationPage = () => {
                   onChange={(e) => setEditingItem(prev => ({ ...prev, title: e.target.value }))}
                   sx={{ mb: 2 }}
                 />
+                <TextField
+                  select
+                  label="Page"
+                  fullWidth
+                  value={editingItem?.page_id || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, page_id: parseInt(e.target.value, 10) }))}
+                  sx={{ mb: 2 }}
+                >
+                  {pages.map((page) => (
+                    <MenuItem key={page.id} value={page.id}>
+                      {page.title}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <TextField
                   label="Display Order"
                   type="number"

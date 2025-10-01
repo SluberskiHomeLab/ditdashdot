@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, Navigate } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import ConfigEditor from './components/ConfigEditor';
-import { Box, CircularProgress, Typography, IconButton } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { Box, CircularProgress, Typography, IconButton, Drawer, List, ListItem, ListItemText, AppBar, Toolbar } from '@mui/material';
+import { Settings as SettingsIcon, Menu as MenuIcon } from '@mui/icons-material';
 import ConfigurationPage from './components/config/ConfigurationPage';
+import NavigationMenu from './components/NavigationMenu';
+import RootRedirect from './components/RootRedirect';
 
 const Dashboard = () => {
+  const { pageId } = useParams();
+  const [pages, setPages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(null);
   const [groups, setGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
@@ -20,6 +25,7 @@ const Dashboard = () => {
   const [fontFamily, setFontFamily] = useState("Arial, sans-serif");
   const [fontSize, setFontSize] = useState("14px");
   const [iconSize, setIconSize] = useState("32px");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Effect to update document title and favicon
   useEffect(() => {
@@ -43,21 +49,35 @@ const Dashboard = () => {
     const loadConfig = async () => {
       try {
         setLoading(true);
-        const [settingsRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
+        const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes] = await Promise.all([
           fetch('/api/settings'),
           fetch('/api/groups'),
           fetch('/api/services'),
-          fetch('/api/icons')
+          fetch('/api/icons'),
+          fetch('/api/pages')
         ]);
 
-        const [settingsData, groupsData, servicesData, iconsData] = await Promise.all([
+        const [settingsData, groupsData, servicesData, iconsData, pagesData] = await Promise.all([
           settingsRes.json(),
           groupsRes.json(),
           servicesRes.json(),
-          iconsRes.json()
+          iconsRes.json(),
+          pagesRes.json()
         ]);
 
-        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData });
+        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData, pagesData });
+
+        // Set pages
+        setPages((pagesData || []).sort((a, b) => a.display_order - b.display_order));
+
+        // Find current page
+        let targetPageId = pageId;
+        if (!targetPageId && pagesData && pagesData.length > 0) {
+          targetPageId = pagesData.sort((a, b) => a.display_order - b.display_order)[0].id.toString();
+        }
+        
+        const currentPageData = pagesData ? pagesData.find(p => p.id.toString() === targetPageId) : null;
+        setCurrentPage(currentPageData);
 
         if (settingsData) {
           setDashboardTitle(settingsData.title || "Homelab Dashboard");
@@ -71,9 +91,21 @@ const Dashboard = () => {
           setIconSize(settingsData.icon_size || "32px");
         }
 
+        // Filter groups and services by current page
+        let filteredGroupsData = groupsData || [];
+        let filteredServicesData = servicesData || [];
+        
+        if (currentPageData) {
+          filteredGroupsData = (groupsData || []).filter(group => group.page_id === currentPageData.id);
+          filteredServicesData = (servicesData || []).filter(service => {
+            const serviceGroup = (groupsData || []).find(g => g.id === service.group_id);
+            return serviceGroup && serviceGroup.page_id === currentPageData.id;
+          });
+        }
+
         // Group services by their group_id
         const groupedServices = {};
-        (servicesData || []).forEach(service => {
+        filteredServicesData.forEach(service => {
           if (!groupedServices[service.group_id]) {
             groupedServices[service.group_id] = [];
           }
@@ -81,7 +113,7 @@ const Dashboard = () => {
         });
 
         // Attach services to their groups
-        const groupsWithServices = (groupsData || []).map(group => ({
+        const groupsWithServices = filteredGroupsData.map(group => ({
           ...group,
           services: groupedServices[group.id] || []
         }));
@@ -97,7 +129,7 @@ const Dashboard = () => {
       }
     };
     loadConfig();
-  }, []);
+  }, [pageId]);
 
   useEffect(() => {
     const intervalRef = { current: null };
@@ -157,8 +189,33 @@ const Dashboard = () => {
 
   return (
     <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles, position: 'relative' }}>
+      <NavigationMenu 
+        open={drawerOpen} 
+        onClose={() => setDrawerOpen(false)} 
+        pages={pages}
+        themeStyles={themeStyles}
+      />
       <div style={{ backgroundColor: 'transparent', padding: '10px', textAlign: 'center', color: themeStyles.color, position: 'relative' }}>
-        <h1 style={{ margin: 0 }}>{dashboardTitle}</h1>
+        <IconButton 
+          onClick={() => setDrawerOpen(true)}
+          style={{ 
+            position: 'absolute', 
+            left: '20px', 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            color: themeStyles.color,
+            width: iconSize,
+            height: iconSize,
+            padding: '8px'
+          }} 
+          title="Navigation Menu"
+        >
+          <MenuIcon style={{ 
+            width: '100%', 
+            height: '100%' 
+          }} />
+        </IconButton>
+        <h1 style={{ margin: 0 }}>{currentPage ? currentPage.title : dashboardTitle}</h1>
         <Link to="/config" style={{ 
           position: 'absolute', 
           right: '20px', 
@@ -263,7 +320,8 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/page/:pageId" element={<Dashboard />} />
         <Route path="/config" element={<ConfigurationPage />} />
       </Routes>
     </Router>
