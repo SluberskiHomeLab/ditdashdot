@@ -455,6 +455,96 @@ app.post('/api/ping', async (req, res) => {
   }
 });
 
+// Widgets routes
+app.get('/api/widgets', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM widgets ORDER BY display_order');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching widgets:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/widgets', async (req, res) => {
+  try {
+    console.log('Received widget creation request:', req.body);
+    const { type, title, config, page_id, display_order, enabled } = req.body;
+    
+    if (!type) {
+      console.log('Validation failed: type is required');
+      return res.status(400).json({ error: 'Widget type is required' });
+    }
+
+    const orderValue = display_order || 0;
+    const enabledValue = enabled !== undefined ? enabled : true;
+    const configValue = config || {};
+
+    const result = await pool.query(
+      'INSERT INTO widgets (type, title, config, page_id, display_order, enabled) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [type, title, JSON.stringify(configValue), page_id, orderValue, enabledValue]
+    );
+    console.log('Widget created successfully:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating widget:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.put('/api/widgets/:id', async (req, res) => {
+  try {
+    console.log('Received widget update request:', { id: req.params.id, body: req.body });
+    const { id } = req.params;
+    const { type, title, config, page_id, display_order, enabled } = req.body;
+    
+    if (!type) {
+      console.log('Validation failed: type is required');
+      return res.status(400).json({ error: 'Widget type is required' });
+    }
+
+    const orderValue = display_order || 0;
+    const enabledValue = enabled !== undefined ? enabled : true;
+    const configValue = config || {};
+
+    const result = await pool.query(
+      'UPDATE widgets SET type = $1, title = $2, config = $3, page_id = $4, display_order = $5, enabled = $6 WHERE id = $7 RETURNING *',
+      [type, title, JSON.stringify(configValue), page_id, orderValue, enabledValue, id]
+    );
+
+    if (result.rows.length === 0) {
+      console.log('Widget not found:', id);
+      return res.status(404).json({ error: 'Widget not found' });
+    }
+
+    console.log('Widget updated successfully:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating widget:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.delete('/api/widgets/:id', async (req, res) => {
+  try {
+    console.log('Received widget deletion request:', req.params.id);
+    const { id } = req.params;
+    
+    const result = await pool.query('DELETE FROM widgets WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      console.log('Widget not found:', id);
+      return res.status(404).json({ error: 'Widget not found' });
+    }
+
+    console.log('Widget deleted successfully:', result.rows[0]);
+    res.json({ message: 'Widget deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting widget:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

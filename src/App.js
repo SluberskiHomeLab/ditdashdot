@@ -7,12 +7,14 @@ import { Settings as SettingsIcon, Menu as MenuIcon } from '@mui/icons-material'
 import ConfigurationPage from './components/config/ConfigurationPage';
 import NavigationMenu from './components/NavigationMenu';
 import RootRedirect from './components/RootRedirect';
+import WidgetContainer from './components/widgets/WidgetContainer';
 
 const Dashboard = () => {
   const { pageId } = useParams();
   const [pages, setPages] = useState([]);
   const [currentPage, setCurrentPage] = useState(null);
   const [groups, setGroups] = useState([]);
+  const [widgets, setWidgets] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
   const [tabTitle, setTabTitle] = useState("Homelab Dashboard");
@@ -49,23 +51,25 @@ const Dashboard = () => {
     const loadConfig = async () => {
       try {
         setLoading(true);
-        const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes] = await Promise.all([
+        const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes] = await Promise.all([
           fetch('/api/settings'),
           fetch('/api/groups'),
           fetch('/api/services'),
           fetch('/api/icons'),
-          fetch('/api/pages')
+          fetch('/api/pages'),
+          fetch('/api/widgets')
         ]);
 
-        const [settingsData, groupsData, servicesData, iconsData, pagesData] = await Promise.all([
+        const [settingsData, groupsData, servicesData, iconsData, pagesData, widgetsData] = await Promise.all([
           settingsRes.json(),
           groupsRes.json(),
           servicesRes.json(),
           iconsRes.json(),
-          pagesRes.json()
+          pagesRes.json(),
+          widgetsRes.json()
         ]);
 
-        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData, pagesData });
+        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData, pagesData, widgetsData });
 
         // Set pages
         setPages((pagesData || []).sort((a, b) => a.display_order - b.display_order));
@@ -91,9 +95,10 @@ const Dashboard = () => {
           setIconSize(settingsData.icon_size || "32px");
         }
 
-        // Filter groups and services by current page
+        // Filter groups, services, and widgets by current page
         let filteredGroupsData = groupsData || [];
         let filteredServicesData = servicesData || [];
+        let filteredWidgetsData = widgetsData || [];
         
         if (currentPageData) {
           filteredGroupsData = (groupsData || []).filter(group => group.page_id === currentPageData.id);
@@ -101,6 +106,7 @@ const Dashboard = () => {
             const serviceGroup = (groupsData || []).find(g => g.id === service.group_id);
             return serviceGroup && serviceGroup.page_id === currentPageData.id;
           });
+          filteredWidgetsData = (widgetsData || []).filter(widget => widget.page_id === currentPageData.id);
         }
 
         // Group services by their group_id
@@ -119,6 +125,7 @@ const Dashboard = () => {
         }));
 
         setGroups(groupsWithServices);
+        setWidgets(filteredWidgetsData);
         setBarIcons(iconsData || []);
         setError(null);
       } catch (err) {
@@ -254,6 +261,16 @@ const Dashboard = () => {
           </IconButton>
         </Link>
       </div>
+      
+      {/* DateTime widgets displayed prominently below title */}
+      {widgets && widgets.length > 0 && (
+        <WidgetContainer 
+          widgets={widgets} 
+          themeStyles={themeStyles} 
+          displayType="datetime"
+        />
+      )}
+      
       <div style={{ textAlign: 'center', margin: '5px 0', color: themeStyles.color }}>
         <input
           type='text'
@@ -288,6 +305,16 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      
+      {/* Other widgets displayed smaller */}
+      {widgets && widgets.length > 0 && (
+        <WidgetContainer 
+          widgets={widgets} 
+          themeStyles={themeStyles} 
+          displayType="other"
+        />
+      )}
+      
       {groups.map((group, idx) => {
         const filtered = filterServices(group.services || []);
         if (filtered.length === 0) return null;
