@@ -36,11 +36,6 @@ Images at: [ditdashdot/images](https://github.com/SluberskiHomeLab/ditdashdot/tr
 
 ### Appearance Options
 - Multiple theme modes:
-  - Light Mode
-  - Dark Mode
-  - Transparent Light
-  - Transparent Dark
-  - Service Status Mode
 - Customizable fonts and sizes
 - Custom background support
 - Configurable favicon and page titles
@@ -79,68 +74,9 @@ This will start three services:
    - Main dashboard: http://localhost:80
    - Configuration interface: http://localhost:80/config (Configuration Interface can be accessed by clicking the settings cog in top right)
 
-### Advanced Installation
-
-For development or custom deployments, you can clone the repository:
-
-```bash
-git clone https://github.com/SluberskiHomeLab/ditdashdot.git
-cd ditdashdot
-docker compose up -d
-```
-
 ## Configuration
 
-DitDashDot features a comprehensive web-based configuration interface that makes it easy to manage your dashboard settings.
-
-### Using the Configuration Interface
-
-Access the configuration interface at `http://localhost:80/config`. The interface is divided into several sections:
-
-#### General Settings
-- Dashboard title and browser tab title
-- Favicon URL
-- Theme selection
-- Font settings
-- Background customization
-
-#### Groups Management
-- Create and organize service groups
-- Set group display order
-- Edit or remove existing groups
-
-#### Services Management
-- Add services with URLs and icons
-- Assign services to groups
-- Configure service monitoring
-- Set service display order
-
-#### Quick Access Icons
-- Add frequently used links to the top bar
-- Upload custom icons
-- Set icon order and appearance
-
-### Data Persistence
-
-All configuration is stored in a PostgreSQL database, providing:
-- Persistent storage across restarts
-- Automatic backups with Docker volumes
-- Data integrity and reliability
-- Change history tracking
-
-### Initial Setup
-
-When first starting the application, the database is initialized with default settings. Use the configuration interface to customize your dashboard according to your needs. All changes are applied in real-time and automatically persisted.
-
-##### Show Details
-Show Details will either show or hide information like ip address and port on the card.
-
-##### Background URL
-Changing the Background URL will set the picture of the Dashboard background.  By default, it will be grey.  I have tested this with links to .jpg and .png images so far.
-
-##### Groups
-Groups are Separate sections intended to improve organization.  Each group that is listed is horizontal and has a centered title
-
+DitDashDot features a comprehensive web-based configuration interface that makes it easy to manage your dashboard settings. Details can be found in the wiki [DitDashDot Wiki](https://github.com/SluberskiHomeLab/ditdashdot/wiki)
 
 #### Additional notes
 
