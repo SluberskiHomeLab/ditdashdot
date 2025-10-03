@@ -1,13 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, Navigate } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import ConfigEditor from './components/ConfigEditor';
-import { Box, CircularProgress, Typography, IconButton } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { Box, CircularProgress, Typography, IconButton, Drawer, List, ListItem, ListItemText, AppBar, Toolbar } from '@mui/material';
+import { Settings as SettingsIcon, Menu as MenuIcon } from '@mui/icons-material';
 import ConfigurationPage from './components/config/ConfigurationPage';
+import NavigationMenu from './components/NavigationMenu';
+import RootRedirect from './components/RootRedirect';
+import WidgetContainer from './components/widgets/WidgetContainer';
 
 const Dashboard = () => {
+  const { pageId } = useParams();
+  const [pages, setPages] = useState([]);
+  const [currentPage, setCurrentPage] = useState(null);
   const [groups, setGroups] = useState([]);
+  const [widgets, setWidgets] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("Homelab Dashboard");
   const [tabTitle, setTabTitle] = useState("Homelab Dashboard");
@@ -20,6 +27,7 @@ const Dashboard = () => {
   const [fontFamily, setFontFamily] = useState("Arial, sans-serif");
   const [fontSize, setFontSize] = useState("14px");
   const [iconSize, setIconSize] = useState("32px");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Effect to update document title and favicon
   useEffect(() => {
@@ -43,21 +51,37 @@ const Dashboard = () => {
     const loadConfig = async () => {
       try {
         setLoading(true);
-        const [settingsRes, groupsRes, servicesRes, iconsRes] = await Promise.all([
+        const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes] = await Promise.all([
           fetch('/api/settings'),
           fetch('/api/groups'),
           fetch('/api/services'),
-          fetch('/api/icons')
+          fetch('/api/icons'),
+          fetch('/api/pages'),
+          fetch('/api/widgets')
         ]);
 
-        const [settingsData, groupsData, servicesData, iconsData] = await Promise.all([
+        const [settingsData, groupsData, servicesData, iconsData, pagesData, widgetsData] = await Promise.all([
           settingsRes.json(),
           groupsRes.json(),
           servicesRes.json(),
-          iconsRes.json()
+          iconsRes.json(),
+          pagesRes.json(),
+          widgetsRes.json()
         ]);
 
-        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData });
+        console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData, pagesData, widgetsData });
+
+        // Set pages
+        setPages((pagesData || []).sort((a, b) => a.display_order - b.display_order));
+
+        // Find current page
+        let targetPageId = pageId;
+        if (!targetPageId && pagesData && pagesData.length > 0) {
+          targetPageId = pagesData.sort((a, b) => a.display_order - b.display_order)[0].id.toString();
+        }
+        
+        const currentPageData = pagesData ? pagesData.find(p => p.id.toString() === targetPageId) : null;
+        setCurrentPage(currentPageData);
 
         if (settingsData) {
           setDashboardTitle(settingsData.title || "Homelab Dashboard");
@@ -71,9 +95,23 @@ const Dashboard = () => {
           setIconSize(settingsData.icon_size || "32px");
         }
 
+        // Filter groups, services, and widgets by current page
+        let filteredGroupsData = groupsData || [];
+        let filteredServicesData = servicesData || [];
+        let filteredWidgetsData = widgetsData || [];
+        
+        if (currentPageData) {
+          filteredGroupsData = (groupsData || []).filter(group => group.page_id === currentPageData.id);
+          filteredServicesData = (servicesData || []).filter(service => {
+            const serviceGroup = (groupsData || []).find(g => g.id === service.group_id);
+            return serviceGroup && serviceGroup.page_id === currentPageData.id;
+          });
+          filteredWidgetsData = (widgetsData || []).filter(widget => widget.page_id === currentPageData.id);
+        }
+
         // Group services by their group_id
         const groupedServices = {};
-        (servicesData || []).forEach(service => {
+        filteredServicesData.forEach(service => {
           if (!groupedServices[service.group_id]) {
             groupedServices[service.group_id] = [];
           }
@@ -81,12 +119,13 @@ const Dashboard = () => {
         });
 
         // Attach services to their groups
-        const groupsWithServices = (groupsData || []).map(group => ({
+        const groupsWithServices = filteredGroupsData.map(group => ({
           ...group,
           services: groupedServices[group.id] || []
         }));
 
         setGroups(groupsWithServices);
+        setWidgets(filteredWidgetsData);
         setBarIcons(iconsData || []);
         setError(null);
       } catch (err) {
@@ -97,31 +136,46 @@ const Dashboard = () => {
       }
     };
     loadConfig();
-  }, []);
+  }, [pageId]);
 
   useEffect(() => {
     const intervalRef = { current: null };
 
     const pingServices = async () => {
-      const newStatuses = {};
-      for (const group of groups) {
-        for (const service of group.services || []) {
-          const key = `${service.ip}:${service.port}`;
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            try {
-              const response = await fetch(service.url, { method: 'HEAD', signal: controller.signal });
-              newStatuses[key] = response.ok;
-            } finally {
-              clearTimeout(timeoutId);
+      try {
+        // Collect all services that have IP and port
+        const servicesToPing = [];
+        for (const group of groups) {
+          for (const service of group.services || []) {
+            if (service.ip && service.port) {
+              servicesToPing.push(service);
             }
-            } catch {
-              newStatuses[key] = false;
-            }
+          }
         }
+
+        if (servicesToPing.length === 0) {
+          setStatuses({});
+          return;
+        }
+
+        // Use server-side ping endpoint
+        const response = await fetch('/api/ping', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ services: servicesToPing }),
+        });
+
+        if (response.ok) {
+          const results = await response.json();
+          setStatuses(results);
+        } else {
+          console.error('Failed to ping services:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error pinging services:', error);
       }
-      setStatuses(newStatuses);
     };
 
     if (groups.length > 0) {
@@ -157,8 +211,33 @@ const Dashboard = () => {
 
   return (
     <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles, position: 'relative' }}>
+      <NavigationMenu 
+        open={drawerOpen} 
+        onClose={() => setDrawerOpen(false)} 
+        pages={pages}
+        themeStyles={themeStyles}
+      />
       <div style={{ backgroundColor: 'transparent', padding: '10px', textAlign: 'center', color: themeStyles.color, position: 'relative' }}>
-        <h1 style={{ margin: 0 }}>{dashboardTitle}</h1>
+        <IconButton 
+          onClick={() => setDrawerOpen(true)}
+          style={{ 
+            position: 'absolute', 
+            left: '20px', 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            color: themeStyles.color,
+            width: iconSize,
+            height: iconSize,
+            padding: '8px'
+          }} 
+          title="Navigation Menu"
+        >
+          <MenuIcon style={{ 
+            width: '100%', 
+            height: '100%' 
+          }} />
+        </IconButton>
+        <h1 style={{ margin: 0 }}>{currentPage ? currentPage.title : dashboardTitle}</h1>
         <Link to="/config" style={{ 
           position: 'absolute', 
           right: '20px', 
@@ -182,6 +261,16 @@ const Dashboard = () => {
           </IconButton>
         </Link>
       </div>
+      
+      {/* DateTime widgets displayed prominently below title */}
+      {widgets && widgets.length > 0 && (
+        <WidgetContainer 
+          widgets={widgets} 
+          themeStyles={themeStyles} 
+          displayType="datetime"
+        />
+      )}
+      
       <div style={{ textAlign: 'center', margin: '5px 0', color: themeStyles.color }}>
         <input
           type='text'
@@ -216,6 +305,16 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      
+      {/* Other widgets displayed smaller */}
+      {widgets && widgets.length > 0 && (
+        <WidgetContainer 
+          widgets={widgets} 
+          themeStyles={themeStyles} 
+          displayType="other"
+        />
+      )}
+      
       {groups.map((group, idx) => {
         const filtered = filterServices(group.services || []);
         if (filtered.length === 0) return null;
@@ -263,7 +362,8 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/page/:pageId" element={<Dashboard />} />
         <Route path="/config" element={<ConfigurationPage />} />
       </Routes>
     </Router>

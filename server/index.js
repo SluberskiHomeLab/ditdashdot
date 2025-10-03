@@ -71,30 +71,66 @@ app.get('/api/groups', async (req, res) => {
 
 app.post('/api/groups', async (req, res) => {
   try {
-    const { title, display_order } = req.body;
+    console.log('Received group creation request:', req.body);
+    const { title, display_order, page_id } = req.body;
+    
+    // Validate required fields
+    if (!title || !page_id) {
+      console.log('Validation failed:', { title, page_id });
+      return res.status(400).json({ error: 'Title and Page are required' });
+    }
+
+    const orderValue = display_order || 0;
+
     const result = await pool.query(
-      'INSERT INTO groups (title, display_order) VALUES ($1, $2) RETURNING *',
-      [title, display_order]
+      'INSERT INTO groups (title, display_order, page_id) VALUES ($1, $2, $3) RETURNING *',
+      [title, orderValue, page_id]
     );
+    console.log('Group created successfully:', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error creating group:', err);
+    if (err.code === '23503') {
+      res.status(400).json({ error: 'Invalid page ID' });
+    } else {
+      res.status(500).json({ error: `Database error: ${err.message}` });
+    }
   }
 });
 
 app.put('/api/groups/:id', async (req, res) => {
   try {
+    console.log('Received group update request:', { id: req.params.id, body: req.body });
     const { id } = req.params;
-    const { title, display_order } = req.body;
+    const { title, display_order, page_id } = req.body;
+    
+    // Validate required fields
+    if (!title || !page_id) {
+      console.log('Validation failed:', { title, page_id });
+      return res.status(400).json({ error: 'Title and Page are required' });
+    }
+
+    const orderValue = display_order || 0;
+
     const result = await pool.query(
-      'UPDATE groups SET title = $1, display_order = $2 WHERE id = $3 RETURNING *',
-      [title, display_order, id]
+      'UPDATE groups SET title = $1, display_order = $2, page_id = $3 WHERE id = $4 RETURNING *',
+      [title, orderValue, page_id, id]
     );
+
+    if (result.rows.length === 0) {
+      console.log('Group not found:', id);
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    console.log('Group updated successfully:', result.rows[0]);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error updating group:', err);
+    if (err.code === '23503') {
+      res.status(400).json({ error: 'Invalid page ID' });
+    } else {
+      res.status(500).json({ error: `Database error: ${err.message}` });
+    }
   }
 });
 
@@ -270,6 +306,242 @@ app.delete('/api/icons/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Pages routes
+app.get('/api/pages', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM pages ORDER BY display_order');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching pages:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/pages', async (req, res) => {
+  try {
+    console.log('Received page creation request:', req.body);
+    const { title, display_order } = req.body;
+    
+    if (!title) {
+      console.log('Validation failed: title is required');
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    const orderValue = display_order || 0;
+
+    const result = await pool.query(
+      'INSERT INTO pages (title, display_order) VALUES ($1, $2) RETURNING *',
+      [title, orderValue]
+    );
+    console.log('Page created successfully:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating page:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.put('/api/pages/:id', async (req, res) => {
+  try {
+    console.log('Received page update request:', { id: req.params.id, body: req.body });
+    const { id } = req.params;
+    const { title, display_order } = req.body;
+    
+    if (!title) {
+      console.log('Validation failed: title is required');
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    const orderValue = display_order || 0;
+
+    const result = await pool.query(
+      'UPDATE pages SET title = $1, display_order = $2 WHERE id = $3 RETURNING *',
+      [title, orderValue, id]
+    );
+
+    if (result.rows.length === 0) {
+      console.log('Page not found:', id);
+      return res.status(404).json({ error: 'Page not found' });
+    }
+
+    console.log('Page updated successfully:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating page:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.delete('/api/pages/:id', async (req, res) => {
+  try {
+    console.log('Received page deletion request:', req.params.id);
+    const { id } = req.params;
+    
+    // Check if there are groups associated with this page
+    const groupCheck = await pool.query('SELECT COUNT(*) FROM groups WHERE page_id = $1', [id]);
+    if (parseInt(groupCheck.rows[0].count) > 0) {
+      return res.status(400).json({ error: 'Cannot delete page with associated groups' });
+    }
+    
+    const result = await pool.query('DELETE FROM pages WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      console.log('Page not found:', id);
+      return res.status(404).json({ error: 'Page not found' });
+    }
+
+    console.log('Page deleted successfully:', result.rows[0]);
+    res.json({ message: 'Page deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting page:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+// Service status check endpoint
+app.post('/api/ping', async (req, res) => {
+  try {
+    const { services } = req.body;
+    const results = {};
+    
+    // Use Promise.allSettled to ping all services concurrently
+    const pingPromises = services.map(async (service) => {
+      if (!service.ip || !service.port) {
+        return { key: `${service.id}`, status: null }; // No IP/port to ping
+      }
+      
+      const key = `${service.ip}:${service.port}`;
+      const net = require('net');
+      
+      return new Promise((resolve) => {
+        const socket = new net.Socket();
+        const timeout = 3000;
+        
+        socket.setTimeout(timeout);
+        socket.on('connect', () => {
+          socket.destroy();
+          resolve({ key, status: true });
+        });
+        
+        socket.on('timeout', () => {
+          socket.destroy();
+          resolve({ key, status: false });
+        });
+        
+        socket.on('error', () => {
+          socket.destroy();
+          resolve({ key, status: false });
+        });
+        
+        socket.connect(service.port, service.ip);
+      });
+    });
+    
+    const pingResults = await Promise.allSettled(pingPromises);
+    
+    pingResults.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value.key) {
+        results[result.value.key] = result.value.status;
+      }
+    });
+    
+    res.json(results);
+  } catch (err) {
+    console.error('Error in ping endpoint:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Widgets routes
+app.get('/api/widgets', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM widgets ORDER BY display_order');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching widgets:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/widgets', async (req, res) => {
+  try {
+    console.log('Received widget creation request:', req.body);
+    const { type, title, config, page_id, display_order, enabled } = req.body;
+    
+    if (!type) {
+      console.log('Validation failed: type is required');
+      return res.status(400).json({ error: 'Widget type is required' });
+    }
+
+    const orderValue = display_order || 0;
+    const enabledValue = enabled !== undefined ? enabled : true;
+    const configValue = config || {};
+
+    const result = await pool.query(
+      'INSERT INTO widgets (type, title, config, page_id, display_order, enabled) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [type, title, JSON.stringify(configValue), page_id, orderValue, enabledValue]
+    );
+    console.log('Widget created successfully:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating widget:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.put('/api/widgets/:id', async (req, res) => {
+  try {
+    console.log('Received widget update request:', { id: req.params.id, body: req.body });
+    const { id } = req.params;
+    const { type, title, config, page_id, display_order, enabled } = req.body;
+    
+    if (!type) {
+      console.log('Validation failed: type is required');
+      return res.status(400).json({ error: 'Widget type is required' });
+    }
+
+    const orderValue = display_order || 0;
+    const enabledValue = enabled !== undefined ? enabled : true;
+    const configValue = config || {};
+
+    const result = await pool.query(
+      'UPDATE widgets SET type = $1, title = $2, config = $3, page_id = $4, display_order = $5, enabled = $6 WHERE id = $7 RETURNING *',
+      [type, title, JSON.stringify(configValue), page_id, orderValue, enabledValue, id]
+    );
+
+    if (result.rows.length === 0) {
+      console.log('Widget not found:', id);
+      return res.status(404).json({ error: 'Widget not found' });
+    }
+
+    console.log('Widget updated successfully:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating widget:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.delete('/api/widgets/:id', async (req, res) => {
+  try {
+    console.log('Received widget deletion request:', req.params.id);
+    const { id } = req.params;
+    
+    const result = await pool.query('DELETE FROM widgets WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      console.log('Widget not found:', id);
+      return res.status(404).json({ error: 'Widget not found' });
+    }
+
+    console.log('Widget deleted successfully:', result.rows[0]);
+    res.json({ message: 'Widget deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting widget:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
   }
 });
 
