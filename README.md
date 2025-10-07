@@ -65,7 +65,7 @@
 
 ### 📦 Quick Deployment
 
-**Option 1: Direct Docker Hub Images (Recommended)**
+**\Docker Compose (Recommended)**
 
 1. Create your project directory:
    ```bash
@@ -82,13 +82,6 @@
    docker compose up -d
    ```
 
-**Option 2: Latest Development Build**
-
-```bash
-git clone https://github.com/SluberskiHomeLab/ditdashdot.git
-cd ditdashdot
-docker compose up -d
-```
 
 ### 🎯 Access Your Dashboard
 
@@ -109,35 +102,6 @@ The system automatically creates:
 3. **Configure Widgets**: Set up weather, time, and solar widgets in the Widgets tab
 4. **Customize Appearance**: Choose your theme and styling in General Settings
 5. **Create Pages**: Organize services across multiple pages as needed
-
-### 🌐 Production Deployment
-
-For production environments, consider:
-
-```yaml
-# docker-compose.yml
-services:
-  dashboard:
-    image: sluberskihomelab/ditdashdot-dashboard:2.2
-    ports:
-      - "80:80"
-    restart: unless-stopped
-    
-  api:
-    image: sluberskihomelab/ditdashdot-api:2.2
-    restart: unless-stopped
-    environment:
-      - POSTGRES_HOST=db
-      - NODE_ENV=production
-      
-  db:
-    image: postgres:14-alpine
-    restart: unless-stopped
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=your_secure_password
-```
 
 ## ⚙️ Configuration
 
