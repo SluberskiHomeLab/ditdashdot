@@ -1,0 +1,144 @@
+/* Theme Background Effects */
+
+/* Retro Theme */
+.retro-bg {
+  background: 
+    radial-gradient(ellipse at center, #f5f5dc 0%, #daa520 100%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 35px,
+      rgba(218, 165, 32, 0.1) 35px,
+      rgba(218, 165, 32, 0.1) 70px
+    );
+  background-attachment: fixed;
+}
+
+.retro-bg::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(0, 0, 0, 0.03) 1px,
+      rgba(0, 0, 0, 0.03) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Matrix Theme */
+.matrix-bg {
+  background: #000000;
+  position: relative;
+}
+
+.matrix-bg::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(90deg, transparent 0%, rgba(0, 255, 0, 0.03) 50%, transparent 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(0, 255, 0, 0.05) 1px,
+      transparent 2px
+    );
+  animation: matrix-rain 20s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes matrix-rain {
+  0% { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Nuclear Theme */
+.nuclear-bg {
+  background: 
+    radial-gradient(ellipse at center, #2d3748 0%, #1a202c 70%, #000000 100%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(255, 255, 0, 0.05) 20px,
+      rgba(255, 255, 0, 0.05) 40px
+    );
+  position: relative;
+}
+
+.nuclear-bg::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 165, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(255, 0, 0, 0.05) 0%, transparent 50%);
+  animation: nuclear-glow 10s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes nuclear-glow {
+  0% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}
+
+/* High Contrast Accessibility */
+.high-contrast-light-bg {
+  background: #ffffff;
+  border: 4px solid #000000;
+  box-shadow: inset 0 0 0 2px #ffffff, inset 0 0 0 6px #000000;
+}
+
+.high-contrast-light-bg * {
+  border-width: 4px !important;
+  font-weight: bold !important;
+}
+
+.high-contrast-dark-bg {
+  background: #000000;
+  border: 4px solid #ffffff;
+  box-shadow: inset 0 0 0 2px #000000, inset 0 0 0 6px #ffffff;
+}
+
+.high-contrast-dark-bg * {
+  border-width: 4px !important;
+  font-weight: bold !important;
+}
+
+/* Animation for interactive elements */
+.theme-card-hover {
+  transition: all 0.3s ease;
+}
+
+.theme-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Service Mode specific animations */
+.service-card-pulse {
+  animation: service-pulse 2s ease-in-out infinite;
+}
+
+@keyframes service-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}

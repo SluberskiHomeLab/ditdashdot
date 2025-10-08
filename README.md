@@ -4,6 +4,62 @@
 
 **DitDashDot** is a modern, feature-rich homelab dashboard that provides a centralized hub for monitoring and accessing your services. Built with React.js and powered by a robust Node.js backend, it offers an intuitive interface for managing complex homelab environments with advanced widgets, multi-page support, and comprehensive customization options.
 
+*Version 2.3 is out now with enhanced themes, alerts, and widgets! See the [CHANGELOG.md](CHANGELOG.md) for details.*
+
+*Partially Vibe-Coded*
+
+## Features
+
+### Core Features
+- Simple and intuitive dashboard interface
+- Clean, modern design focused on usability
+- Real-time service status monitoring
+- Fully web-based configuration interface
+- PostgreSQL database for reliable configuration storage
+
+### Dashboard Features
+- Group services into logical categories
+- Customizable service cards with icons
+- Quick access bar for frequently used links
+- Real-time service health status
+- Search functionality for quick service access
+
+### Configuration Features
+- Web-based configuration interface at /config
+- Live preview of changes
+- Group management
+- Service configuration
+- Quick access icon management
+- Theme customization
+
+### Alert Management Features
+- **Service Down Notifications**: Automatically detect when services go offline
+- **Webhook Integration**: Send alerts to Discord, Slack, or other services via webhooks
+- **Custom Down Thresholds**: Configure how long services must be down before alerting
+- **Alert Pause System**: Temporarily pause alerts during maintenance (1hr, 4hr, 24hr options)
+- **Alert History**: Track all alert events with timestamps and delivery status
+- **Per-Service Settings**: Override global alert settings for individual services
+- **Service Mode Integration**: Alerts only active when using Service Status theme mode
+
+### Enhanced Theme System (v2.3)
+- **11 Comprehensive Themes** with advanced visual effects:
+  - **Professional Themes**: Light Mode, Dark Mode, Transparent Light/Dark
+  - **Service Status Themes**: Service Mode (original), Service Mode Dark, Service Mode Light
+  - **Retro/Gaming Themes**: Retro (1990's beige with scanlines), Matrix (animated green rain), Nuclear (radioactive glow)
+  - **Accessibility Themes**: High Contrast Light, High Contrast Dark (WCAG compliant)
+- **Advanced Visual Effects**: CSS animations, background patterns, hover effects
+- **Modular Architecture**: Centralized theme configuration for easy customization
+- Customizable fonts and sizes
+- Custom background support
+- Configurable favicon and page titles
+
+### Widget System
+- **DateTime Widget**: Real-time clock with customizable formatting and timezones
+- **Weather Widget**: Current conditions from OpenWeatherMap API with configurable units
+- **Sun Position Widget**: Sunrise/sunset times with daylight progress tracking
+- **Flexible Configuration**: JSON-based widget settings with live preview
+
+## Getting Started
 *🚀 Version 2.2  is now available with comprehensive widgets system! *
 
 *Partially Vibe-Coded*
@@ -76,12 +132,76 @@
    ```bash
    curl -O https://raw.githubusercontent.com/SluberskiHomeLab/ditdashdot/main/docker-compose.yml
    ```
+   
+   Or create it manually with the following content:
+   ```yaml
+   services:
+     dashboard:
+       image: sluberskihomelab/ditdashdot-dashboard:latest
+       ports:
+         - "80:80"
+       depends_on:
+         - api
+         - db
+       restart: always
+
+     api:
+       image: sluberskihomelab/ditdashdot-api:latest
+       ports:
+         - "3001:3001"
+       environment:
+         - POSTGRES_USER=ditdashdot
+         - POSTGRES_PASSWORD=ditdashdot
+         - POSTGRES_DB=ditdashdot
+         - POSTGRES_HOST=db
+       depends_on:
+         - db
+       restart: always
+
+     db:
+       image: postgres:14-alpine
+       environment:
+         - POSTGRES_USER=ditdashdot
+         - POSTGRES_PASSWORD=ditdashdot
+         - POSTGRES_DB=ditdashdot
+       volumes:
+         - postgres_data:/var/lib/postgresql/data
+       restart: always
+
+   volumes:
+     postgres_data:
+   ```
 
 3. Launch your dashboard:
    ```bash
    docker compose up -d
    ```
 
+This will start three services:
+- Frontend Dashboard (accessible at http://localhost:80)
+- Backend API Server
+- PostgreSQL Database
+
+4. Access your dashboard:
+   - Main dashboard: http://localhost:80
+   - Configuration interface: http://localhost:80/config
+
+### Docker Hub Images
+
+DitDashDot is available as pre-built images on Docker Hub:
+
+- **Dashboard**: `sluberskihomelab/ditdashdot-dashboard:latest` or `sluberskihomelab/ditdashdot-dashboard:2.3`
+- **API**: `sluberskihomelab/ditdashdot-api:latest` or `sluberskihomelab/ditdashdot-api:2.3`
+
+### Advanced Installation
+
+For development or custom deployments, you can clone the repository:
+
+```bash
+git clone https://github.com/SluberskiHomeLab/ditdashdot.git
+cd ditdashdot
+docker compose up -d
+```
 
 ### 🎯 Access Your Dashboard
 
@@ -109,7 +229,50 @@ DitDashDot provides a powerful, intuitive web-based configuration interface that
 
 #### You can find Documentation about running and configuring DitDashDot in the Wiki
 
-##### (Wiki)[https://github.com/SluberskiHomeLab/ditdashdot/wiki]
+#### Widget Management
+- **Add/Edit Widgets**: Configure datetime, weather, and sun position widgets
+- **JSON Configuration**: Advanced widget settings with real-time validation
+- **Display Control**: Enable/disable widgets and set display order
+- **Page Assignment**: Assign widgets to specific dashboard pages
+
+#### Alert Management
+- **Enable/Disable Alerts**: Global toggle for the entire alert system
+- **Down Threshold**: Configure how many minutes services must be down before triggering alerts (default: 5 minutes)
+- **Webhook Configuration**: Set up Discord, Slack, or other webhook URLs for notifications
+- **Alert Pausing**: Temporarily pause alerts for maintenance periods (1, 4, or 24 hours)
+- **Alert History**: View all past alerts with delivery status and timestamps
+- **Per-Service Settings**: Override global settings for individual services
+
+**Important**: Alerts only function when using any of the Service Status themes (Service Mode, Service Mode Dark, or Service Mode Light). These themes provide visual color-coding for service status (green for up, red for down, gray for unknown) which is required for the alert system to function properly. The muted variants (Dark/Light) provide the same functionality with more subtle colors for better readability.
+
+For detailed setup instructions, see [ALERTS.md](ALERTS.md).
+
+### Theme System (v2.3)
+
+DitDashDot now features an enhanced theme system with 11 distinct visual themes:
+
+#### Professional Themes
+- **Light Mode**: Clean white background with dark text for professional environments
+- **Dark Mode**: Modern dark theme with light text for low-light conditions
+- **Transparent Light/Dark**: See-through backgrounds perfect for custom wallpapers
+
+#### Service Status Themes
+- **Service Mode**: Original status-based coloring with bright green/red/gray indicators
+- **Service Mode Dark**: Muted dark variant with subtle status colors for better readability
+- **Service Mode Light**: Muted light variant with gentle status indication
+
+#### Retro & Gaming Themes
+- **Retro**: 1990's beige aesthetic with vintage scanline effects and diagonal patterns
+- **Matrix**: Green-on-black theme with animated matrix rain effect
+- **Nuclear**: Dark theme with radioactive yellow/orange glow animations
+
+#### Accessibility Themes
+- **High Contrast Light**: Pure white background with bold 4px black borders and heavy typography
+- **High Contrast Dark**: Pure black background with bold 4px white borders for maximum contrast
+
+All themes feature hardware-accelerated animations, responsive design, and consistent styling across all interface components.
+
+### Data Persistence
 
 ### 🔄 Configuration Best Practices
 
@@ -150,11 +313,30 @@ DitDashDot provides a powerful, intuitive web-based configuration interface that
 
 ### Local Development Setup
 
-1. **Clone and prepare**:
-   ```bash
-   git clone https://github.com/SluberskiHomeLab/ditdashdot.git
-   cd ditdashdot
-   ```
+## Technologies Used
+
+- **Frontend**:
+  - React.js 18 with modern hooks
+  - Material-UI (MUI) components
+  - React Router for navigation
+  - CSS3 animations and effects
+  - Modular theme architecture
+
+- **Backend**:
+  - Node.js/Express API server
+  - PostgreSQL 14 database
+  - RESTful API with webhook integration
+  - Real-time service monitoring
+  - Alert management system
+
+- **Infrastructure**:
+  - Docker containerization
+  - Docker Compose orchestration
+  - Nginx reverse proxy
+  - Alpine Linux base images
+  - Docker Hub distribution
+
+## Development
 
 2. **Development with Docker** (Recommended):
    ```bash

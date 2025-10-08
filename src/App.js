@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, Navigate } from 'react-router-dom';
 import ServiceCard from './components/ServiceCard';
 import ConfigEditor from './components/ConfigEditor';
-import { Box, CircularProgress, Typography, IconButton, Drawer, List, ListItem, ListItemText, AppBar, Toolbar } from '@mui/material';
+import { Box, CircularProgress, Typography, IconButton, Drawer, List, ListItem, ListItemText, AppBar, Toolbar, Alert } from '@mui/material';
 import { Settings as SettingsIcon, Menu as MenuIcon } from '@mui/icons-material';
 import ConfigurationPage from './components/config/ConfigurationPage';
 import NavigationMenu from './components/NavigationMenu';
 import RootRedirect from './components/RootRedirect';
 import WidgetContainer from './components/widgets/WidgetContainer';
+import { getTheme, getServiceCardStyle } from './themes/themeConfig';
+import './themes/backgrounds.css';
 
 const Dashboard = () => {
   const { pageId } = useParams();
@@ -28,6 +30,7 @@ const Dashboard = () => {
   const [fontSize, setFontSize] = useState("14px");
   const [iconSize, setIconSize] = useState("32px");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [alertSettings, setAlertSettings] = useState({ enabled: false });
 
   // Effect to update document title and favicon
   useEffect(() => {
@@ -51,22 +54,24 @@ const Dashboard = () => {
     const loadConfig = async () => {
       try {
         setLoading(true);
-        const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes] = await Promise.all([
+        const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes, alertSettingsRes] = await Promise.all([
           fetch('/api/settings'),
           fetch('/api/groups'),
           fetch('/api/services'),
           fetch('/api/icons'),
           fetch('/api/pages'),
-          fetch('/api/widgets')
+          fetch('/api/widgets'),
+          fetch('/api/alert-settings').catch(() => ({ json: () => Promise.resolve({}) }))
         ]);
 
-        const [settingsData, groupsData, servicesData, iconsData, pagesData, widgetsData] = await Promise.all([
+        const [settingsData, groupsData, servicesData, iconsData, pagesData, widgetsData, alertSettingsData] = await Promise.all([
           settingsRes.json(),
           groupsRes.json(),
           servicesRes.json(),
           iconsRes.json(),
           pagesRes.json(),
-          widgetsRes.json()
+          widgetsRes.json(),
+          alertSettingsRes.json()
         ]);
 
         console.log('Loaded data:', { settingsData, groupsData, servicesData, iconsData, pagesData, widgetsData });
@@ -127,6 +132,7 @@ const Dashboard = () => {
         setGroups(groupsWithServices);
         setWidgets(filteredWidgetsData);
         setBarIcons(iconsData || []);
+        setAlertSettings(alertSettingsData || { enabled: false });
         setError(null);
       } catch (err) {
         console.error("Failed to load configuration:", err);
@@ -188,21 +194,30 @@ const Dashboard = () => {
     };
   }, [groups]);
 
+  // Get theme configuration
+  const currentTheme = getTheme(mode);
+  
   const themeStyles = {
-    backgroundColor:
-      mode === "dark_mode" ? "#222"
-      : mode === "light_mode" ? "#fff"
-      : "transparent",
-    color:
-      mode === "dark_mode" ? "#fff"
-      : mode === "light_mode" ? "#1a1616ff"
-      : mode === "trans_dark" ? "#fff"
-      : mode === "trans_light" ? "#000"
-      : "#1a1616ff",
+    backgroundColor: currentTheme.backgroundColor,
+    color: currentTheme.color,
     minHeight: '100vh',
-    backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined,
-    backgroundSize: 'cover'
+    backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : currentTheme.backgroundImage ? `url(${currentTheme.backgroundImage})` : undefined,
+    backgroundSize: 'cover',
+    backgroundAttachment: 'fixed',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    // Apply custom theme styles
+    ...(currentTheme.cardStyle && { 
+      fontFamily: currentTheme.cardStyle.fontFamily 
+    })
   };
+  
+  // Add CSS class for special background effects
+  const themeClass = mode === 'matrix' ? 'matrix-bg' : 
+                    mode === 'retro' ? 'retro-bg' : 
+                    mode === 'nuclear' ? 'nuclear-bg' : 
+                    mode === 'high_contrast_light' ? 'high-contrast-light-bg' :
+                    mode === 'high_contrast_dark' ? 'high-contrast-dark-bg' : '';
 
   const filterServices = (services) =>
     services.filter(service =>
@@ -210,7 +225,15 @@ const Dashboard = () => {
     );
 
   return (
-    <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles, position: 'relative' }}>
+    <div 
+      className={themeClass}
+      style={{ 
+        padding: '0px', 
+        fontFamily: currentTheme.cardStyle?.fontFamily || 'Arial, sans-serif', 
+        ...themeStyles, 
+        position: 'relative' 
+      }}
+    >
       <NavigationMenu 
         open={drawerOpen} 
         onClose={() => setDrawerOpen(false)} 
@@ -261,6 +284,18 @@ const Dashboard = () => {
           </IconButton>
         </Link>
       </div>
+      
+      {/* Alert notification banner */}
+      {alertSettings.enabled && mode !== "service_mode" && (
+        <div style={{ padding: '10px 20px' }}>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Alerts are enabled but will only work when using "Service Mode" theme. 
+            <Link to="/config" style={{ textDecoration: 'none', marginLeft: '8px' }}>
+              Change to Service Mode
+            </Link>
+          </Alert>
+        </div>
+      )}
       
       {/* DateTime widgets displayed prominently below title */}
       {widgets && widgets.length > 0 && (
