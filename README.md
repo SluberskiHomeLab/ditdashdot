@@ -54,6 +54,11 @@
 - **Icon Support**: Custom icons for services and quick-access toolbar
 - **Health Monitoring**: Automated ping checks with customizable intervals
 - **Service Cards**: Rich information display with status indicators
+- **Alert Management System**: Webhook notifications for service downtime (Service Mode only)
+  - Configurable downtime thresholds
+  - Per-service or global webhook configuration
+  - Pause/resume functionality
+  - Alert history tracking
 
 ## 🚀 Getting Started
 
@@ -102,14 +107,16 @@ The system automatically creates:
 3. **Configure Widgets**: Set up weather, time, and solar widgets in the Widgets tab
 4. **Customize Appearance**: Choose your theme and styling in General Settings
 5. **Create Pages**: Organize services across multiple pages as needed
+6. **Set Up Alerts** (Optional): Configure webhook notifications for service monitoring in Service Mode
 
 ## ⚙️ Configuration
 
-DitDashDot provides a powerful, intuitive web-based configuration interface that makes managing complex homelab setups effortless.
+DitDashDot provides a powerful, intuitive web-based configuration interface that makes managing complex homelab setups effortlessly.
 
-#### You can find Documentation about running and configuring DitDashDot in the Wiki
+### 📖 Documentation
 
-##### (Wiki)[https://github.com/SluberskiHomeLab/ditdashdot/wiki]
+- **[Wiki](https://github.com/SluberskiHomeLab/ditdashdot/wiki)** - Comprehensive guides for running and configuring DitDashDot
+- **[ALERTS.md](ALERTS.md)** - Complete guide to setting up and using the Alert Management System
 
 ### 🔄 Configuration Best Practices
 
