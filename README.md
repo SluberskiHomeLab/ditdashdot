@@ -32,6 +32,15 @@
 - Quick access icon management
 - Theme customization
 
+### Alert Management Features
+- **Service Down Notifications**: Automatically detect when services go offline
+- **Webhook Integration**: Send alerts to Discord, Slack, or other services via webhooks
+- **Custom Down Thresholds**: Configure how long services must be down before alerting
+- **Alert Pause System**: Temporarily pause alerts during maintenance (1hr, 4hr, 24hr options)
+- **Alert History**: Track all alert events with timestamps and delivery status
+- **Per-Service Settings**: Override global alert settings for individual services
+- **Service Mode Integration**: Alerts only active when using Service Status theme mode
+
 ### Appearance Options
 - Multiple theme modes:
   - Light Mode
@@ -117,6 +126,18 @@ Access the configuration interface at `http://localhost:80/config`. The interfac
 - Add frequently used links to the top bar
 - Upload custom icons
 - Set icon order and appearance
+
+#### Alert Management
+- **Enable/Disable Alerts**: Global toggle for the entire alert system
+- **Down Threshold**: Configure how many minutes services must be down before triggering alerts (default: 5 minutes)
+- **Webhook Configuration**: Set up Discord, Slack, or other webhook URLs for notifications
+- **Alert Pausing**: Temporarily pause alerts for maintenance periods (1, 4, or 24 hours)
+- **Alert History**: View all past alerts with delivery status and timestamps
+- **Per-Service Settings**: Override global settings for individual services
+
+**Important**: Alerts only function when the dashboard is set to "Service Status Mode" theme. This theme provides visual color-coding for service status (green for up, red for down) which is required for the alert system to function properly.
+
+For detailed setup instructions, see [ALERTS.md](ALERTS.md).
 
 ### Data Persistence
 
