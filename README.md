@@ -4,7 +4,7 @@
 
 **DitDashDot** is a simple, clean, and easy-to-configure services dashboard designed specifically for homelabs. Built with React.js and containerized with Docker, it provides a central hub to view and manage your homelab services.
 
-*Version 2.0.0 is out now with major improvements! See the [CHANGELOG.md](CHANGELOG.md) for details.*
+*Version 2.3 is out now with enhanced themes, alerts, and widgets! See the [CHANGELOG.md](CHANGELOG.md) for details.*
 
 *Partially Vibe-Coded*
 
@@ -41,16 +41,23 @@
 - **Per-Service Settings**: Override global alert settings for individual services
 - **Service Mode Integration**: Alerts only active when using Service Status theme mode
 
-### Appearance Options
-- Multiple theme modes:
-  - Light Mode
-  - Dark Mode
-  - Transparent Light
-  - Transparent Dark
-  - Service Status Mode
+### Enhanced Theme System (v2.3)
+- **11 Comprehensive Themes** with advanced visual effects:
+  - **Professional Themes**: Light Mode, Dark Mode, Transparent Light/Dark
+  - **Service Status Themes**: Service Mode (original), Service Mode Dark, Service Mode Light
+  - **Retro/Gaming Themes**: Retro (1990's beige with scanlines), Matrix (animated green rain), Nuclear (radioactive glow)
+  - **Accessibility Themes**: High Contrast Light, High Contrast Dark (WCAG compliant)
+- **Advanced Visual Effects**: CSS animations, background patterns, hover effects
+- **Modular Architecture**: Centralized theme configuration for easy customization
 - Customizable fonts and sizes
 - Custom background support
 - Configurable favicon and page titles
+
+### Widget System
+- **DateTime Widget**: Real-time clock with customizable formatting and timezones
+- **Weather Widget**: Current conditions from OpenWeatherMap API with configurable units
+- **Sun Position Widget**: Sunrise/sunset times with daylight progress tracking
+- **Flexible Configuration**: JSON-based widget settings with live preview
 
 ## Getting Started
 
@@ -71,6 +78,45 @@
    ```bash
    curl -O https://raw.githubusercontent.com/SluberskiHomeLab/ditdashdot/main/docker-compose.yml
    ```
+   
+   Or create it manually with the following content:
+   ```yaml
+   services:
+     dashboard:
+       image: sluberskihomelab/ditdashdot-dashboard:latest
+       ports:
+         - "80:80"
+       depends_on:
+         - api
+         - db
+       restart: always
+
+     api:
+       image: sluberskihomelab/ditdashdot-api:latest
+       ports:
+         - "3001:3001"
+       environment:
+         - POSTGRES_USER=ditdashdot
+         - POSTGRES_PASSWORD=ditdashdot
+         - POSTGRES_DB=ditdashdot
+         - POSTGRES_HOST=db
+       depends_on:
+         - db
+       restart: always
+
+     db:
+       image: postgres:14-alpine
+       environment:
+         - POSTGRES_USER=ditdashdot
+         - POSTGRES_PASSWORD=ditdashdot
+         - POSTGRES_DB=ditdashdot
+       volumes:
+         - postgres_data:/var/lib/postgresql/data
+       restart: always
+
+   volumes:
+     postgres_data:
+   ```
 
 3. Start the services:
    ```bash
@@ -85,6 +131,13 @@ This will start three services:
 4. Access your dashboard:
    - Main dashboard: http://localhost:80
    - Configuration interface: http://localhost:80/config
+
+### Docker Hub Images
+
+DitDashDot is available as pre-built images on Docker Hub:
+
+- **Dashboard**: `sluberskihomelab/ditdashdot-dashboard:latest` or `sluberskihomelab/ditdashdot-dashboard:2.3`
+- **API**: `sluberskihomelab/ditdashdot-api:latest` or `sluberskihomelab/ditdashdot-api:2.3`
 
 ### Advanced Installation
 
@@ -107,9 +160,9 @@ Access the configuration interface at `http://localhost:80/config`. The interfac
 #### General Settings
 - Dashboard title and browser tab title
 - Favicon URL
-- Theme selection
-- Font settings
-- Background customization
+- **Enhanced Theme Selection**: Choose from 11 themes including retro, matrix, nuclear, and accessibility options
+- Font settings and typography customization
+- Background customization with support for custom images
 
 #### Groups Management
 - Create and organize service groups
@@ -127,6 +180,12 @@ Access the configuration interface at `http://localhost:80/config`. The interfac
 - Upload custom icons
 - Set icon order and appearance
 
+#### Widget Management
+- **Add/Edit Widgets**: Configure datetime, weather, and sun position widgets
+- **JSON Configuration**: Advanced widget settings with real-time validation
+- **Display Control**: Enable/disable widgets and set display order
+- **Page Assignment**: Assign widgets to specific dashboard pages
+
 #### Alert Management
 - **Enable/Disable Alerts**: Global toggle for the entire alert system
 - **Down Threshold**: Configure how many minutes services must be down before triggering alerts (default: 5 minutes)
@@ -135,9 +194,34 @@ Access the configuration interface at `http://localhost:80/config`. The interfac
 - **Alert History**: View all past alerts with delivery status and timestamps
 - **Per-Service Settings**: Override global settings for individual services
 
-**Important**: Alerts only function when the dashboard is set to "Service Status Mode" theme. This theme provides visual color-coding for service status (green for up, red for down) which is required for the alert system to function properly.
+**Important**: Alerts only function when using any of the Service Status themes (Service Mode, Service Mode Dark, or Service Mode Light). These themes provide visual color-coding for service status (green for up, red for down, gray for unknown) which is required for the alert system to function properly. The muted variants (Dark/Light) provide the same functionality with more subtle colors for better readability.
 
 For detailed setup instructions, see [ALERTS.md](ALERTS.md).
+
+### Theme System (v2.3)
+
+DitDashDot now features an enhanced theme system with 11 distinct visual themes:
+
+#### Professional Themes
+- **Light Mode**: Clean white background with dark text for professional environments
+- **Dark Mode**: Modern dark theme with light text for low-light conditions
+- **Transparent Light/Dark**: See-through backgrounds perfect for custom wallpapers
+
+#### Service Status Themes
+- **Service Mode**: Original status-based coloring with bright green/red/gray indicators
+- **Service Mode Dark**: Muted dark variant with subtle status colors for better readability
+- **Service Mode Light**: Muted light variant with gentle status indication
+
+#### Retro & Gaming Themes
+- **Retro**: 1990's beige aesthetic with vintage scanline effects and diagonal patterns
+- **Matrix**: Green-on-black theme with animated matrix rain effect
+- **Nuclear**: Dark theme with radioactive yellow/orange glow animations
+
+#### Accessibility Themes
+- **High Contrast Light**: Pure white background with bold 4px black borders and heavy typography
+- **High Contrast Dark**: Pure black background with bold 4px white borders for maximum contrast
+
+All themes feature hardware-accelerated animations, responsive design, and consistent styling across all interface components.
 
 ### Data Persistence
 
@@ -167,20 +251,26 @@ Groups are Separate sections intended to improve organization.  Each group that 
 
 ## Technologies Used
 
-- Frontend:
-  - React.js
-  - Material-UI
-  - React Router
+- **Frontend**:
+  - React.js 18 with modern hooks
+  - Material-UI (MUI) components
+  - React Router for navigation
+  - CSS3 animations and effects
+  - Modular theme architecture
 
-- Backend:
-  - Node.js/Express
-  - PostgreSQL
-  - RESTful API
+- **Backend**:
+  - Node.js/Express API server
+  - PostgreSQL 14 database
+  - RESTful API with webhook integration
+  - Real-time service monitoring
+  - Alert management system
 
-- Infrastructure:
-  - Docker
-  - Docker Compose
-  - Nginx
+- **Infrastructure**:
+  - Docker containerization
+  - Docker Compose orchestration
+  - Nginx reverse proxy
+  - Alpine Linux base images
+  - Docker Hub distribution
 
 ## Development
 
