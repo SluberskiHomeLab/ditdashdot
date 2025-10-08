@@ -27,6 +27,7 @@ import {
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Home as HomeIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { THEMES } from '../../themes/themeConfig';
 
 const API_URL = '/api'; // Using relative URL
 
@@ -485,11 +486,9 @@ const ConfigurationPage = () => {
                 onChange={handleChange}
                 fullWidth
               >
-                <MenuItem value="light_mode">Light Mode</MenuItem>
-                <MenuItem value="dark_mode">Dark Mode</MenuItem>
-                <MenuItem value="trans_light">Transparent Light</MenuItem>
-                <MenuItem value="trans_dark">Transparent Dark</MenuItem>
-                <MenuItem value="service_mode">Service Mode</MenuItem>
+                {Object.entries(THEMES).map(([key, theme]) => (
+                  <MenuItem key={key} value={key}>{theme.name}</MenuItem>
+                ))}
               </TextField>
               
               <FormControlLabel

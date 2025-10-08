@@ -8,6 +8,8 @@ import ConfigurationPage from './components/config/ConfigurationPage';
 import NavigationMenu from './components/NavigationMenu';
 import RootRedirect from './components/RootRedirect';
 import WidgetContainer from './components/widgets/WidgetContainer';
+import { getTheme, getServiceCardStyle } from './themes/themeConfig';
+import './themes/backgrounds.css';
 
 const Dashboard = () => {
   const { pageId } = useParams();
@@ -192,21 +194,30 @@ const Dashboard = () => {
     };
   }, [groups]);
 
+  // Get theme configuration
+  const currentTheme = getTheme(mode);
+  
   const themeStyles = {
-    backgroundColor:
-      mode === "dark_mode" ? "#222"
-      : mode === "light_mode" ? "#fff"
-      : "transparent",
-    color:
-      mode === "dark_mode" ? "#fff"
-      : mode === "light_mode" ? "#1a1616ff"
-      : mode === "trans_dark" ? "#fff"
-      : mode === "trans_light" ? "#000"
-      : "#1a1616ff",
+    backgroundColor: currentTheme.backgroundColor,
+    color: currentTheme.color,
     minHeight: '100vh',
-    backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined,
-    backgroundSize: 'cover'
+    backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : currentTheme.backgroundImage ? `url(${currentTheme.backgroundImage})` : undefined,
+    backgroundSize: 'cover',
+    backgroundAttachment: 'fixed',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    // Apply custom theme styles
+    ...(currentTheme.cardStyle && { 
+      fontFamily: currentTheme.cardStyle.fontFamily 
+    })
   };
+  
+  // Add CSS class for special background effects
+  const themeClass = mode === 'matrix' ? 'matrix-bg' : 
+                    mode === 'retro' ? 'retro-bg' : 
+                    mode === 'nuclear' ? 'nuclear-bg' : 
+                    mode === 'high_contrast_light' ? 'high-contrast-light-bg' :
+                    mode === 'high_contrast_dark' ? 'high-contrast-dark-bg' : '';
 
   const filterServices = (services) =>
     services.filter(service =>
@@ -214,7 +225,15 @@ const Dashboard = () => {
     );
 
   return (
-    <div style={{ padding: '0px', fontFamily: 'Arial, sans-serif', ...themeStyles, position: 'relative' }}>
+    <div 
+      className={themeClass}
+      style={{ 
+        padding: '0px', 
+        fontFamily: currentTheme.cardStyle?.fontFamily || 'Arial, sans-serif', 
+        ...themeStyles, 
+        position: 'relative' 
+      }}
+    >
       <NavigationMenu 
         open={drawerOpen} 
         onClose={() => setDrawerOpen(false)} 
