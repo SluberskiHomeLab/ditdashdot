@@ -56,13 +56,17 @@ const ConfigurationPage = () => {
     background_url: '',
     font_family: 'Arial, sans-serif',
     font_size: '14px',
-    icon_size: '32px'
+    icon_size: '32px',
+    alerts_enabled: false,
+    alert_webhook_url: '',
+    alert_threshold_minutes: 5
   });
   const [pages, setPages] = useState([]);
   const [groups, setGroups] = useState([]);
   const [services, setServices] = useState([]);
   const [widgets, setWidgets] = useState([]);
   const [icons, setIcons] = useState([]);
+  const [alertConfigs, setAlertConfigs] = useState([]);
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState('');
@@ -74,13 +78,14 @@ const ConfigurationPage = () => {
 
   const fetchData = async () => {
     try {
-      const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes] = await Promise.all([
+      const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes, alertConfigsRes] = await Promise.all([
         axios.get(`${API_URL}/settings`),
         axios.get(`${API_URL}/groups`),
         axios.get(`${API_URL}/services`),
         axios.get(`${API_URL}/icons`),
         axios.get(`${API_URL}/pages`),
-        axios.get(`${API_URL}/widgets`)
+        axios.get(`${API_URL}/widgets`),
+        axios.get(`${API_URL}/alert-config`)
       ]);
 
       setSettings(settingsRes.data || {});
@@ -89,6 +94,7 @@ const ConfigurationPage = () => {
       setServices(servicesRes.data || []);
       setWidgets(widgetsRes.data || []);
       setIcons(iconsRes.data || []);
+      setAlertConfigs(alertConfigsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       setAlert({
@@ -233,6 +239,22 @@ const ConfigurationPage = () => {
         data: editingItem
       });
       
+      // Special handling for alert-config
+      if (dialogType === 'alert-config') {
+        const { service_name, ...dataToSend } = editingItem;
+        const response = await axios.post(`${API_URL}/alert-config`, dataToSend);
+        console.log('Server response:', response.data);
+        
+        setDialogOpen(false);
+        fetchData();
+        setAlert({
+          open: true,
+          message: 'Alert configuration saved successfully',
+          severity: 'success'
+        });
+        return;
+      }
+      
       const endpoint = `${API_URL}/${dialogType}`;
       const method = editingItem.id ? 'put' : 'post';
       const url = editingItem.id ? `${endpoint}/${editingItem.id}` : endpoint;
@@ -289,6 +311,7 @@ const ConfigurationPage = () => {
             <Tab label="Services" />
             <Tab label="Widgets" />
             <Tab label="Icons" />
+            <Tab label="Alerts" />
           </Tabs>
         </Box>
 
@@ -375,6 +398,45 @@ const ConfigurationPage = () => {
                 value={settings.icon_size}
                 onChange={handleChange}
                 fullWidth
+              />
+              
+              <Divider sx={{ my: 2 }} />
+              
+              <Typography variant="h6" gutterBottom>
+                Alert Settings (Service Mode Only)
+              </Typography>
+              
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={settings.alerts_enabled || false}
+                    onChange={handleSwitchChange}
+                    name="alerts_enabled"
+                    disabled={settings.mode !== 'service_mode'}
+                  />
+                }
+                label={`Enable Alerts ${settings.mode !== 'service_mode' ? '(Service Mode required)' : ''}`}
+              />
+              
+              <TextField
+                label="Global Alert Webhook URL"
+                name="alert_webhook_url"
+                value={settings.alert_webhook_url || ''}
+                onChange={handleChange}
+                fullWidth
+                disabled={!settings.alerts_enabled}
+                helperText="Default webhook URL for all services (can be overridden per service)"
+              />
+              
+              <TextField
+                label="Default Alert Threshold (minutes)"
+                name="alert_threshold_minutes"
+                type="number"
+                value={settings.alert_threshold_minutes || 5}
+                onChange={handleChange}
+                fullWidth
+                disabled={!settings.alerts_enabled}
+                helperText="Send alert when service is down for this many minutes"
               />
               
               <Button
@@ -553,6 +615,97 @@ const ConfigurationPage = () => {
                 </Box>
               </ListItem>
             ))}
+          </List>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={6}>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body1" color={settings.mode !== 'service_mode' ? 'error' : 'textPrimary'} sx={{ mb: 2 }}>
+              {settings.mode !== 'service_mode' 
+                ? '⚠️ Alerts are only available in Service Mode. Please change the theme to Service Mode in General Settings.'
+                : 'Configure alert notifications for individual services below.'}
+            </Typography>
+            {settings.mode === 'service_mode' && !settings.alerts_enabled && (
+              <Typography variant="body2" color="warning.main" sx={{ mb: 2 }}>
+                ⚠️ Alerts are currently disabled. Enable them in General Settings to receive notifications.
+              </Typography>
+            )}
+          </Box>
+          <List>
+            {services.map((service) => {
+              const alertConfig = alertConfigs.find(ac => ac.service_id === service.id) || {};
+              const hasAlert = Boolean(alertConfig.id);
+              
+              return (
+                <ListItem key={service.id}>
+                  <ListItemText 
+                    primary={service.name}
+                    secondary={
+                      <Box>
+                        <div>{service.ip && service.port ? `${service.ip}:${service.port}` : 'No IP/Port configured'}</div>
+                        {hasAlert && (
+                          <div style={{ marginTop: 4 }}>
+                            {alertConfig.paused ? (
+                              <span style={{ color: '#ff9800' }}>⏸️ Paused</span>
+                            ) : alertConfig.enabled ? (
+                              <span style={{ color: '#4caf50' }}>✓ Alert enabled ({alertConfig.threshold_minutes}min threshold)</span>
+                            ) : (
+                              <span style={{ color: '#999' }}>Alert disabled</span>
+                            )}
+                          </div>
+                        )}
+                      </Box>
+                    }
+                  />
+                  <ListItemSecondaryAction>
+                    {hasAlert && alertConfig.enabled && (
+                      <IconButton 
+                        onClick={async () => {
+                          try {
+                            await axios.patch(`${API_URL}/alert-config/${service.id}/pause`, {
+                              paused: !alertConfig.paused
+                            });
+                            fetchData();
+                            setAlert({
+                              open: true,
+                              message: `Alert ${alertConfig.paused ? 'unpaused' : 'paused'} successfully`,
+                              severity: 'success'
+                            });
+                          } catch (error) {
+                            console.error('Error toggling alert pause:', error);
+                            setAlert({
+                              open: true,
+                              message: 'Error toggling alert pause',
+                              severity: 'error'
+                            });
+                          }
+                        }}
+                        title={alertConfig.paused ? 'Unpause alerts' : 'Pause alerts'}
+                      >
+                        {alertConfig.paused ? '▶️' : '⏸️'}
+                      </IconButton>
+                    )}
+                    <IconButton 
+                      onClick={() => {
+                        setDialogType('alert-config');
+                        setEditingItem({
+                          ...alertConfig,
+                          service_id: service.id,
+                          service_name: service.name,
+                          enabled: hasAlert ? alertConfig.enabled : true,
+                          threshold_minutes: hasAlert ? alertConfig.threshold_minutes : settings.alert_threshold_minutes || 5,
+                          webhook_url: hasAlert ? alertConfig.webhook_url : settings.alert_webhook_url || ''
+                        });
+                        setDialogOpen(true);
+                      }}
+                      disabled={settings.mode !== 'service_mode' || !service.ip || !service.port}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              );
+            })}
           </List>
         </TabPanel>
       </Paper>
@@ -783,6 +936,41 @@ const ConfigurationPage = () => {
                   fullWidth
                   value={editingItem?.display_order || 0}
                   onChange={(e) => setEditingItem(prev => ({ ...prev, display_order: parseInt(e.target.value, 10) }))}
+                />
+              </>
+            )}
+            {dialogType === 'alert-config' && (
+              <>
+                <Typography variant="h6" gutterBottom>
+                  Alert Configuration for: {editingItem?.service_name}
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={editingItem?.enabled !== false}
+                      onChange={(e) => setEditingItem(prev => ({ ...prev, enabled: e.target.checked }))}
+                    />
+                  }
+                  label="Enable Alerts for this Service"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Webhook URL"
+                  fullWidth
+                  value={editingItem?.webhook_url || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, webhook_url: e.target.value }))}
+                  sx={{ mb: 2 }}
+                  helperText="Leave empty to use global webhook URL"
+                  disabled={!editingItem?.enabled}
+                />
+                <TextField
+                  label="Alert Threshold (minutes)"
+                  type="number"
+                  fullWidth
+                  value={editingItem?.threshold_minutes || 5}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, threshold_minutes: parseInt(e.target.value, 10) }))}
+                  helperText="Alert will be sent when service is down for this many minutes"
+                  disabled={!editingItem?.enabled}
                 />
               </>
             )}

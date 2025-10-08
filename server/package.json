@@ -12,7 +12,8 @@
     "pg": "^8.11.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express-async-handler": "^1.2.0"
+    "express-async-handler": "^1.2.0",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

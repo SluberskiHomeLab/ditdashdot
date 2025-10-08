@@ -48,8 +48,8 @@ app.put('/api/settings', async (req, res) => {
   try {
     const settings = req.body;
     await pool.query(
-      'UPDATE dashboard_config SET title = $1, tab_title = $2, favicon_url = $3, background_url = $4, mode = $5, show_details = $6, font_family = $7, font_size = $8, icon_size = $9',
-      [settings.title, settings.tab_title, settings.favicon_url, settings.background_url, settings.mode, settings.show_details, settings.font_family, settings.font_size, settings.icon_size]
+      'UPDATE dashboard_config SET title = $1, tab_title = $2, favicon_url = $3, background_url = $4, mode = $5, show_details = $6, font_family = $7, font_size = $8, icon_size = $9, alerts_enabled = $10, alert_webhook_url = $11, alert_threshold_minutes = $12',
+      [settings.title, settings.tab_title, settings.favicon_url, settings.background_url, settings.mode, settings.show_details, settings.font_family, settings.font_size, settings.icon_size, settings.alerts_enabled, settings.alert_webhook_url, settings.alert_threshold_minutes]
     );
     res.json({ message: 'Settings updated successfully' });
   } catch (err) {
@@ -402,15 +402,67 @@ app.delete('/api/pages/:id', async (req, res) => {
 });
 
 // Service status check endpoint
+// Helper function to send webhook alert
+async function sendWebhookAlert(webhookUrl, service, downMinutes) {
+  const fetch = require('node-fetch');
+  const payload = {
+    service: {
+      id: service.id,
+      name: service.name,
+      url: service.url,
+      ip: service.ip,
+      port: service.port
+    },
+    status: 'down',
+    downtime_minutes: downMinutes,
+    timestamp: new Date().toISOString(),
+    message: `Service "${service.name}" has been down for ${downMinutes} minutes`
+  };
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      timeout: 5000
+    });
+
+    // Log alert to history
+    await pool.query(
+      'INSERT INTO alert_history (service_id, alert_type, message, webhook_url, status, response_status) VALUES ($1, $2, $3, $4, $5, $6)',
+      [service.id, 'service_down', payload.message, webhookUrl, 'sent', response.status]
+    );
+
+    console.log(`Alert sent for service ${service.name}: ${response.status}`);
+    return { success: true, status: response.status };
+  } catch (error) {
+    console.error(`Error sending alert for service ${service.name}:`, error);
+    
+    // Log failed alert to history
+    await pool.query(
+      'INSERT INTO alert_history (service_id, alert_type, message, webhook_url, status) VALUES ($1, $2, $3, $4, $5)',
+      [service.id, 'service_down', payload.message, webhookUrl, 'failed']
+    );
+    
+    return { success: false, error: error.message };
+  }
+}
+
 app.post('/api/ping', async (req, res) => {
   try {
     const { services } = req.body;
     const results = {};
     
+    // Get global settings for alert checking
+    const settingsResult = await pool.query('SELECT mode, alerts_enabled FROM dashboard_config LIMIT 1');
+    const settings = settingsResult.rows[0] || {};
+    const isServiceMode = settings.mode === 'service_mode';
+    const alertsEnabled = settings.alerts_enabled === true;
+    
     // Use Promise.allSettled to ping all services concurrently
     const pingPromises = services.map(async (service) => {
       if (!service.ip || !service.port) {
-        return { key: `${service.id}`, status: null }; // No IP/port to ping
+        return { key: `${service.id}`, status: null, serviceId: service.id }; // No IP/port to ping
       }
       
       const key = `${service.ip}:${service.port}`;
@@ -423,17 +475,17 @@ app.post('/api/ping', async (req, res) => {
         socket.setTimeout(timeout);
         socket.on('connect', () => {
           socket.destroy();
-          resolve({ key, status: true });
+          resolve({ key, status: true, serviceId: service.id, service });
         });
         
         socket.on('timeout', () => {
           socket.destroy();
-          resolve({ key, status: false });
+          resolve({ key, status: false, serviceId: service.id, service });
         });
         
         socket.on('error', () => {
           socket.destroy();
-          resolve({ key, status: false });
+          resolve({ key, status: false, serviceId: service.id, service });
         });
         
         socket.connect(service.port, service.ip);
@@ -442,11 +494,92 @@ app.post('/api/ping', async (req, res) => {
     
     const pingResults = await Promise.allSettled(pingPromises);
     
-    pingResults.forEach((result) => {
+    // Process results and update service status
+    for (const result of pingResults) {
       if (result.status === 'fulfilled' && result.value.key) {
-        results[result.value.key] = result.value.status;
+        const { key, status, serviceId, service } = result.value;
+        results[key] = status;
+        
+        // Update service_status table and check for alerts
+        if (serviceId && isServiceMode && alertsEnabled) {
+          // Get current status from database
+          const statusResult = await pool.query(
+            'SELECT * FROM service_status WHERE service_id = $1',
+            [serviceId]
+          );
+          
+          const now = new Date();
+          
+          if (status === false) {
+            // Service is down
+            if (statusResult.rows.length === 0) {
+              // First time seeing this service down
+              await pool.query(
+                'INSERT INTO service_status (service_id, is_up, downtime_started_at, last_checked_at) VALUES ($1, $2, $3, $4)',
+                [serviceId, false, now, now]
+              );
+            } else {
+              const currentStatus = statusResult.rows[0];
+              if (currentStatus.is_up) {
+                // Service just went down
+                await pool.query(
+                  'UPDATE service_status SET is_up = $1, downtime_started_at = $2, last_checked_at = $3 WHERE service_id = $4',
+                  [false, now, now, serviceId]
+                );
+              } else {
+                // Service still down, check if we need to send alert
+                const downtimeMinutes = (now - new Date(currentStatus.downtime_started_at)) / (1000 * 60);
+                
+                // Get alert config for this service
+                const alertConfigResult = await pool.query(
+                  'SELECT * FROM alert_config WHERE service_id = $1 AND enabled = true AND paused = false',
+                  [serviceId]
+                );
+                
+                if (alertConfigResult.rows.length > 0) {
+                  const alertConfig = alertConfigResult.rows[0];
+                  const thresholdMinutes = alertConfig.threshold_minutes || 5;
+                  const webhookUrl = alertConfig.webhook_url;
+                  
+                  // Check if downtime exceeds threshold and we haven't sent an alert recently
+                  if (downtimeMinutes >= thresholdMinutes && webhookUrl) {
+                    // Check if we've already sent an alert for this downtime period
+                    const recentAlertResult = await pool.query(
+                      'SELECT * FROM alert_history WHERE service_id = $1 AND created_at > $2 ORDER BY created_at DESC LIMIT 1',
+                      [serviceId, currentStatus.downtime_started_at]
+                    );
+                    
+                    if (recentAlertResult.rows.length === 0) {
+                      // Send alert - this is the first alert for this downtime period
+                      await sendWebhookAlert(webhookUrl, service, Math.floor(downtimeMinutes));
+                    }
+                  }
+                }
+                
+                // Update last checked time
+                await pool.query(
+                  'UPDATE service_status SET last_checked_at = $1 WHERE service_id = $2',
+                  [now, serviceId]
+                );
+              }
+            }
+          } else {
+            // Service is up
+            if (statusResult.rows.length === 0) {
+              await pool.query(
+                'INSERT INTO service_status (service_id, is_up, downtime_started_at, last_checked_at) VALUES ($1, $2, $3, $4)',
+                [serviceId, true, null, now]
+              );
+            } else {
+              await pool.query(
+                'UPDATE service_status SET is_up = $1, downtime_started_at = $2, last_checked_at = $3 WHERE service_id = $4',
+                [true, null, now, serviceId]
+              );
+            }
+          }
+        }
       }
-    });
+    }
     
     res.json(results);
   } catch (err) {
@@ -542,6 +675,159 @@ app.delete('/api/widgets/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting widget:', err);
     res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+// Alert configuration routes
+app.get('/api/alert-config', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM alert_config ORDER BY service_id');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching alert configs:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/alert-config/:serviceId', async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    const result = await pool.query('SELECT * FROM alert_config WHERE service_id = $1', [serviceId]);
+    if (result.rows.length === 0) {
+      return res.json(null);
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching alert config:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/alert-config', async (req, res) => {
+  try {
+    const { service_id, enabled, threshold_minutes, webhook_url } = req.body;
+    
+    if (!service_id) {
+      return res.status(400).json({ error: 'service_id is required' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO alert_config (service_id, enabled, threshold_minutes, webhook_url)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (service_id) 
+       DO UPDATE SET enabled = $2, threshold_minutes = $3, webhook_url = $4
+       RETURNING *`,
+      [service_id, enabled !== false, threshold_minutes || 5, webhook_url]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating/updating alert config:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.put('/api/alert-config/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { enabled, paused, threshold_minutes, webhook_url } = req.body;
+    
+    const result = await pool.query(
+      'UPDATE alert_config SET enabled = $1, paused = $2, threshold_minutes = $3, webhook_url = $4 WHERE id = $5 RETURNING *',
+      [enabled, paused, threshold_minutes, webhook_url, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Alert config not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating alert config:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.patch('/api/alert-config/:serviceId/pause', async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    const { paused } = req.body;
+    
+    const result = await pool.query(
+      'UPDATE alert_config SET paused = $1 WHERE service_id = $2 RETURNING *',
+      [paused, serviceId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Alert config not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error pausing/unpausing alert:', err);
+    res.status(500).json({ error: `Database error: ${err.message}` });
+  }
+});
+
+app.delete('/api/alert-config/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM alert_config WHERE id = $1', [id]);
+    res.json({ message: 'Alert config deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting alert config:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Alert history routes
+app.get('/api/alert-history', async (req, res) => {
+  try {
+    const { serviceId, limit } = req.query;
+    let query = 'SELECT * FROM alert_history';
+    let params = [];
+    
+    if (serviceId) {
+      query += ' WHERE service_id = $1';
+      params.push(serviceId);
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    if (limit) {
+      query += ` LIMIT $${params.length + 1}`;
+      params.push(parseInt(limit));
+    }
+    
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching alert history:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Service status routes
+app.get('/api/service-status', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM service_status');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching service status:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/service-status/:serviceId', async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    const result = await pool.query('SELECT * FROM service_status WHERE service_id = $1', [serviceId]);
+    if (result.rows.length === 0) {
+      return res.json(null);
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching service status:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
