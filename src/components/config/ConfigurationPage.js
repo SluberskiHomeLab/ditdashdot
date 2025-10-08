@@ -63,6 +63,14 @@ const ConfigurationPage = () => {
   const [services, setServices] = useState([]);
   const [widgets, setWidgets] = useState([]);
   const [icons, setIcons] = useState([]);
+  const [alertSettings, setAlertSettings] = useState({
+    enabled: true,
+    webhook_url: '',
+    webhook_enabled: false,
+    down_threshold_minutes: 5,
+    paused_until: null
+  });
+  const [alertHistory, setAlertHistory] = useState([]);
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState('');
@@ -74,13 +82,15 @@ const ConfigurationPage = () => {
 
   const fetchData = async () => {
     try {
-      const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes] = await Promise.all([
+      const [settingsRes, groupsRes, servicesRes, iconsRes, pagesRes, widgetsRes, alertSettingsRes, alertHistoryRes] = await Promise.all([
         axios.get(`${API_URL}/settings`),
         axios.get(`${API_URL}/groups`),
         axios.get(`${API_URL}/services`),
         axios.get(`${API_URL}/icons`),
         axios.get(`${API_URL}/pages`),
-        axios.get(`${API_URL}/widgets`)
+        axios.get(`${API_URL}/widgets`),
+        axios.get(`${API_URL}/alert-settings`).catch(() => ({ data: {} })),
+        axios.get(`${API_URL}/alert-history?limit=100`).catch(() => ({ data: [] }))
       ]);
 
       setSettings(settingsRes.data || {});
@@ -89,6 +99,14 @@ const ConfigurationPage = () => {
       setServices(servicesRes.data || []);
       setWidgets(widgetsRes.data || []);
       setIcons(iconsRes.data || []);
+      setAlertSettings(alertSettingsRes.data || {
+        enabled: true,
+        webhook_url: '',
+        webhook_enabled: false,
+        down_threshold_minutes: 5,
+        paused_until: null
+      });
+      setAlertHistory(alertHistoryRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       setAlert({
@@ -258,6 +276,145 @@ const ConfigurationPage = () => {
     }
   };
 
+  // Alert management functions
+  const handleAlertSettingsChange = (field, value) => {
+    setAlertSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAlertSettingsSave = async () => {
+    try {
+      console.log('Saving alert settings:', alertSettings);
+      const response = await axios.put(`${API_URL}/alert-settings`, alertSettings);
+      console.log('Alert settings save response:', response.data);
+      
+      // Update local state with saved data
+      setAlertSettings(response.data);
+      
+      setAlert({
+        open: true,
+        message: 'Alert settings saved successfully',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error saving alert settings:', error);
+      console.error('Error details:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.message ||
+                          'Error saving alert settings - please check server logs';
+      
+      setAlert({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handlePauseAlerts = async (hours) => {
+    try {
+      const pauseUntil = new Date();
+      pauseUntil.setHours(pauseUntil.getHours() + hours);
+      
+      const updatedSettings = {
+        ...alertSettings,
+        paused_until: pauseUntil.toISOString()
+      };
+      
+      await axios.put(`${API_URL}/alert-settings`, updatedSettings);
+      setAlertSettings(updatedSettings);
+      
+      setAlert({
+        open: true,
+        message: `Alerts paused for ${hours} hour${hours > 1 ? 's' : ''}`,
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error pausing alerts:', error);
+      setAlert({
+        open: true,
+        message: 'Error pausing alerts',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleResumeAlerts = async () => {
+    try {
+      const updatedSettings = {
+        ...alertSettings,
+        paused_until: null
+      };
+      
+      await axios.put(`${API_URL}/alert-settings`, updatedSettings);
+      setAlertSettings(updatedSettings);
+      
+      setAlert({
+        open: true,
+        message: 'Alerts resumed',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error resuming alerts:', error);
+      setAlert({
+        open: true,
+        message: 'Error resuming alerts',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleClearAlertHistory = async () => {
+    try {
+      await axios.delete(`${API_URL}/alert-history`);
+      setAlertHistory([]);
+      setAlert({
+        open: true,
+        message: 'Alert history cleared successfully',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error clearing alert history:', error);
+      setAlert({
+        open: true,
+        message: 'Error clearing alert history',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    try {
+      const response = await axios.post(`${API_URL}/test-webhook`, {
+        webhook_url: alertSettings.webhook_url
+      });
+      
+      setAlert({
+        open: true,
+        message: response.data.message || 'Test webhook sent successfully!',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Error testing webhook:', error);
+      setAlert({
+        open: true,
+        message: error.response?.data?.error || 'Error testing webhook',
+        severity: 'error'
+      });
+    }
+  };
+
+  const formatAlertTime = (timestamp) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
+  const isAlertsPaused = () => {
+    return alertSettings.paused_until && new Date(alertSettings.paused_until) > new Date();
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Paper elevation={3} sx={{ p: 4, position: 'relative' }}>
@@ -289,6 +446,7 @@ const ConfigurationPage = () => {
             <Tab label="Services" />
             <Tab label="Widgets" />
             <Tab label="Icons" />
+            <Tab label="Alerts" />
           </Tabs>
         </Box>
 
@@ -555,6 +713,187 @@ const ConfigurationPage = () => {
             ))}
           </List>
         </TabPanel>
+
+        <TabPanel value={tabValue} index={6}>
+          <Typography variant="h6" gutterBottom>
+            Alert Settings
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Note: Alerts only work when Service Mode theme is enabled.
+          </Typography>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 4 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={alertSettings.enabled}
+                  onChange={(e) => handleAlertSettingsChange('enabled', e.target.checked)}
+                />
+              }
+              label="Enable Alerts"
+            />
+            
+            <TextField
+              label="Down Threshold (minutes)"
+              type="number"
+              value={alertSettings.down_threshold_minutes || 5}
+              onChange={(e) => handleAlertSettingsChange('down_threshold_minutes', parseInt(e.target.value) || 5)}
+              helperText="How long a service must be down before sending an alert"
+              inputProps={{ min: 1, max: 1440 }}
+            />
+            
+            <Divider />
+            
+            <Typography variant="h6">Webhook Notifications</Typography>
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={alertSettings.webhook_enabled}
+                  onChange={(e) => handleAlertSettingsChange('webhook_enabled', e.target.checked)}
+                />
+              }
+              label="Enable Webhook Notifications"
+            />
+            
+            <TextField
+              label="Discord Webhook URL"
+              fullWidth
+              value={alertSettings.webhook_url || ''}
+              onChange={(e) => handleAlertSettingsChange('webhook_url', e.target.value)}
+              placeholder="https://discord.com/api/webhooks/..."
+              helperText="Discord webhook URL for sending notifications"
+              disabled={!alertSettings.webhook_enabled}
+            />
+            
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                onClick={handleAlertSettingsSave}
+              >
+                Save Alert Settings
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleTestWebhook}
+                disabled={!alertSettings.webhook_enabled || !alertSettings.webhook_url}
+              >
+                Test Webhook
+              </Button>
+            </Box>
+          </Box>
+          
+          <Divider sx={{ my: 3 }} />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Typography variant="h6">
+              Alert Control
+            </Typography>
+            {isAlertsPaused() && (
+              <Typography variant="body2" color="warning.main">
+                Alerts paused until {formatAlertTime(alertSettings.paused_until)}
+              </Typography>
+            )}
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 4 }}>
+            {!isAlertsPaused() ? (
+              <>
+                <Button
+                  variant="outlined"
+                  onClick={() => handlePauseAlerts(1)}
+                  disabled={!alertSettings.enabled}
+                >
+                  Pause 1 Hour
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => handlePauseAlerts(4)}
+                  disabled={!alertSettings.enabled}
+                >
+                  Pause 4 Hours
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => handlePauseAlerts(24)}
+                  disabled={!alertSettings.enabled}
+                >
+                  Pause 24 Hours
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleResumeAlerts}
+              >
+                Resume Alerts
+              </Button>
+            )}
+          </Box>
+          
+          <Divider sx={{ my: 3 }} />
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6">
+              Alert History ({alertHistory.length} alerts)
+            </Typography>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleClearAlertHistory}
+              disabled={alertHistory.length === 0}
+            >
+              Clear History
+            </Button>
+          </Box>
+          
+          <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+            {alertHistory.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                No alerts recorded yet
+              </Typography>
+            ) : (
+              <List>
+                {alertHistory.map((alert) => (
+                  <ListItem key={alert.id} divider>
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              bgcolor: alert.alert_type === 'service_down' ? 'error.main' : 'success.main'
+                            }}
+                          />
+                          <Typography variant="body1">
+                            {alert.service_name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            ({alert.service_ip}:{alert.service_port})
+                          </Typography>
+                        </Box>
+                      }
+                      secondary={
+                        <Box>
+                          <Typography variant="body2">
+                            {alert.message}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatAlertTime(alert.created_at)} • 
+                            Webhook: {alert.webhook_sent ? '✅ Sent' : '❌ Failed'}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </Box>
+        </TabPanel>
       </Paper>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
@@ -674,6 +1013,28 @@ const ConfigurationPage = () => {
                   fullWidth
                   value={editingItem?.display_order || 0}
                   onChange={(e) => setEditingItem(prev => ({ ...prev, display_order: parseInt(e.target.value, 10) }))}
+                  sx={{ mb: 2 }}
+                />
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Alert Settings</Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={editingItem?.alert_enabled !== false}
+                      onChange={(e) => setEditingItem(prev => ({ ...prev, alert_enabled: e.target.checked }))}
+                    />
+                  }
+                  label="Enable alerts for this service"
+                  sx={{ mb: 2 }}
+                />
+                <TextField
+                  label="Down Threshold (minutes) - Leave empty to use global default"
+                  type="number"
+                  fullWidth
+                  value={editingItem?.down_threshold_minutes || ''}
+                  onChange={(e) => setEditingItem(prev => ({ ...prev, down_threshold_minutes: e.target.value ? parseInt(e.target.value, 10) : null }))}
+                  helperText="Override global down threshold for this service"
+                  inputProps={{ min: 1, max: 1440 }}
                 />
               </>
             )}
