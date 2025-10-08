@@ -1,0 +1,40 @@
+/* CSS-based background patterns for themes */
+
+.retro-bg {
+  background: 
+    radial-gradient(circle at 25% 25%, #8b4513 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, #d2b48c 0%, transparent 50%),
+    linear-gradient(45deg, #f5f5dc 25%, transparent 25%),
+    linear-gradient(-45deg, #ddd8c0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f5f5dc 75%),
+    linear-gradient(-45deg, transparent 75%, #ddd8c0 75%);
+  background-size: 60px 60px, 60px 60px, 30px 30px, 30px 30px, 30px 30px, 30px 30px;
+  background-position: 0 0, 30px 30px, 0 0, 15px 0, 15px 15px, 0 15px;
+}
+
+.matrix-bg {
+  background: 
+    linear-gradient(90deg, transparent 98%, #00ff00 100%),
+    linear-gradient(0deg, transparent 98%, #00ff00 100%);
+  background-size: 20px 20px, 20px 20px;
+  animation: matrix-scroll 20s linear infinite;
+}
+
+@keyframes matrix-scroll {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 20px 20px, 0 20px; }
+}
+
+.nuclear-bg {
+  background: 
+    radial-gradient(circle at 20% 50%, #ffd700 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, #ff4500 0%, transparent 50%),
+    repeating-linear-gradient(
+      45deg,
+      #1a1a0d 0px,
+      #1a1a0d 10px,
+      #2a2a1a 10px,
+      #2a2a1a 20px
+    );
+  background-size: 100px 100px, 100px 100px, 20px 20px;
+}
