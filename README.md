@@ -2,7 +2,7 @@
 
 # DitDashDot
 
-**DitDashDot** is a simple, clean, and easy-to-configure services dashboard designed specifically for homelabs. Built with React.js and containerized with Docker, it provides a central hub to view and manage your homelab services.
+**DitDashDot** is a modern, feature-rich homelab dashboard that provides a centralized hub for monitoring and accessing your services. Built with React.js and powered by a robust Node.js backend, it offers an intuitive interface for managing complex homelab environments with advanced widgets, multi-page support, and comprehensive customization options.
 
 *Version 2.3 is out now with enhanced themes, alerts, and widgets! See the [CHANGELOG.md](CHANGELOG.md) for details.*
 
@@ -60,21 +60,75 @@
 - **Flexible Configuration**: JSON-based widget settings with live preview
 
 ## Getting Started
+*🚀 Version 2.2  is now available with comprehensive widgets system! *
+
+*Partially Vibe-Coded*
+
+## ✨ Features
+
+### 🎛️ Core Dashboard Features
+- **Multi-Page Support**: Organize services across multiple pages with seamless navigation
+- **Collapsible Navigation Menu**: Hamburger menu with page switching and clean URL routing
+- **Real-Time Service Monitoring**: TCP-based health checks with visual status indicators
+- **Advanced Search**: Instant filtering across all services and pages
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+
+### 📊 Comprehensive Widgets System
+- **Weather Widget**: Real-time weather conditions with OpenWeatherMap integration
+  - Current temperature, humidity, wind speed
+  - Weather icons and detailed forecasts
+  - Configurable units (metric/imperial) and locations
+- **Sun Position Widget**: Solar tracking with sunrise/sunset times
+  - Daylight duration calculation
+  - Real-time progress bars showing day/night status
+  - Configurable latitude/longitude coordinates
+- **Date/Time Widget**: Customizable clock and calendar display
+  - Horizontal layout with time-first prominence
+  - Configurable timezones, formats, and greeting messages
+  - Real-time updates with compact 12pt font design
+
+### 🛠️ Configuration & Management
+- **Intuitive Web Interface**: Complete dashboard configuration at `/config`
+- **JSON Configuration Editor**: Advanced widget settings with real-time validation
+- **CRUD Operations**: Full Create, Read, Update, Delete for all components
+- **Live Preview**: See changes instantly without restarts
+- **Import/Export**: Backup and restore configurations easily
+
+### 🎨 Appearance & Theming
+- **Multiple Theme Modes**:
+  - Light Mode - Clean and bright interface
+  - Dark Mode - Easy on the eyes for 24/7 monitoring
+  - Transparent Light/Dark - Overlay your custom backgrounds
+  - Service Status Mode - Color-coded based on service health
+- **Custom Styling**: Fonts, sizes, colors, and backgrounds
+- **Flexible Layout**: Configurable widget positioning and sizing
+- **Brand Customization**: Custom favicons, titles, and branding
+
+### 🔧 Service Management
+- **Flexible Service Configuration**: Optional IP/port fields for diverse service types
+- **Group Organization**: Logical categorization with drag-and-drop ordering
+- **Icon Support**: Custom icons for services and quick-access toolbar
+- **Health Monitoring**: Automated ping checks with customizable intervals
+- **Service Cards**: Rich information display with status indicators
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- [Docker](https://www.docker.com/) installed on your host machine
-- [Docker Compose](https://docs.docker.com/compose/) v2 or higher
+- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) v2+
+- 512MB+ available RAM
+- Modern web browser (Chrome, Firefox, Safari, Edge)
 
-### Quick Start
+### 📦 Quick Deployment
 
-1. Create a new directory for your dashboard:
+**\Docker Compose (Recommended)**
+
+1. Create your project directory:
    ```bash
-   mkdir ditdashdot
-   cd ditdashdot
+   mkdir ditdashdot && cd ditdashdot
    ```
 
-2. Create a `docker-compose.yml` file:
+2. Download the production-ready docker-compose.yml:
    ```bash
    curl -O https://raw.githubusercontent.com/SluberskiHomeLab/ditdashdot/main/docker-compose.yml
    ```
@@ -118,7 +172,7 @@
      postgres_data:
    ```
 
-3. Start the services:
+3. Launch your dashboard:
    ```bash
    docker compose up -d
    ```
@@ -149,36 +203,31 @@ cd ditdashdot
 docker compose up -d
 ```
 
-## Configuration
+### 🎯 Access Your Dashboard
 
-DitDashDot features a comprehensive web-based configuration interface that makes it easy to manage your dashboard settings.
+After deployment, access your services at:
+- **Main Dashboard**: http://localhost (or your server's IP)
+- **Configuration Interface**: http://localhost/config
+- **API Documentation**: http://localhost:3001/api
 
-### Using the Configuration Interface
+The system automatically creates:
+- PostgreSQL database with persistent storage
+- Default "Home" page ready for customization
+- Sample configuration to get you started
 
-Access the configuration interface at `http://localhost:80/config`. The interface is divided into several sections:
+### 🔧 First-Time Setup
 
-#### General Settings
-- Dashboard title and browser tab title
-- Favicon URL
-- **Enhanced Theme Selection**: Choose from 11 themes including retro, matrix, nuclear, and accessibility options
-- Font settings and typography customization
-- Background customization with support for custom images
+1. **Navigate to Configuration**: Visit `/config` to begin setup
+2. **Add Your Services**: Use the Services tab to add your homelab services
+3. **Configure Widgets**: Set up weather, time, and solar widgets in the Widgets tab
+4. **Customize Appearance**: Choose your theme and styling in General Settings
+5. **Create Pages**: Organize services across multiple pages as needed
 
-#### Groups Management
-- Create and organize service groups
-- Set group display order
-- Edit or remove existing groups
+## ⚙️ Configuration
 
-#### Services Management
-- Add services with URLs and icons
-- Assign services to groups
-- Configure service monitoring
-- Set service display order
+DitDashDot provides a powerful, intuitive web-based configuration interface that makes managing complex homelab setups effortless.
 
-#### Quick Access Icons
-- Add frequently used links to the top bar
-- Upload custom icons
-- Set icon order and appearance
+#### You can find Documentation about running and configuring DitDashDot in the Wiki
 
 #### Widget Management
 - **Add/Edit Widgets**: Configure datetime, weather, and sun position widgets
@@ -225,29 +274,44 @@ All themes feature hardware-accelerated animations, responsive design, and consi
 
 ### Data Persistence
 
-All configuration is stored in a PostgreSQL database, providing:
-- Persistent storage across restarts
-- Automatic backups with Docker volumes
-- Data integrity and reliability
-- Change history tracking
+### 🔄 Configuration Best Practices
 
-### Initial Setup
+- **Regular Backups**: Export configurations before major changes
+- **Environment Variables**: Use secrets for API keys in production
+- **Testing**: Validate widget configurations in development first
+- **Documentation**: Keep notes on custom configurations and API keys
+- **Monitoring**: Check widget API quotas and service availability
 
-When first starting the application, the database is initialized with default settings. Use the configuration interface to customize your dashboard according to your needs. All changes are applied in real-time and automatically persisted.
+## 🏗️ Architecture & Technologies
 
-##### Show Details
-Show Details will either show or hide information like ip address and port on the card.
+### **Frontend Stack**
+- **React 18**: Modern hooks-based architecture with concurrent features
+- **Material-UI v5**: Comprehensive component library with theming
+- **React Router v6**: Client-side routing with clean URL patterns
+- **Axios**: HTTP client with interceptors and error handling
+- **CSS-in-JS**: Dynamic theming and responsive design
 
-##### Background URL
-Changing the Background URL will set the picture of the Dashboard background.  By default, it will be grey.  I have tested this with links to .jpg and .png images so far.
+### **Backend Stack**
+- **Node.js 18**: Modern JavaScript runtime with ES modules
+- **Express.js**: Lightweight, fast web framework
+- **PostgreSQL 14**: Enterprise-grade database with JSONB support
+- **RESTful API**: Clean, predictable endpoint design
+- **TCP Socket Health Checks**: Reliable service monitoring
 
-##### Groups
-Groups are Separate sections intended to improve organization.  Each group that is listed is horizontal and has a centered title
+### **Infrastructure & Deployment**
+- **Docker Multi-Stage Builds**: Optimized production images
+- **Nginx**: High-performance reverse proxy and static file serving
+- **Docker Hub**: Official images with semantic versioning
+- **Database Migrations**: Automated schema updates
 
+### **Third-Party Integrations**
+- **OpenWeatherMap API**: Real-time weather data
+- **Sunrise-Sunset API**: Solar position calculations
+- **Custom Icon Support**: External image hosting compatibility
 
-#### Additional notes
+## 🛠️ Development
 
-- There are updates coming for the project.  I will track them here in GitHub.
+### Local Development Setup
 
 ## Technologies Used
 
@@ -274,32 +338,59 @@ Groups are Separate sections intended to improve organization.  Each group that 
 
 ## Development
 
-To work on DitDashDot locally:
-
-1. Clone the repository
-2. Install dependencies:
+2. **Development with Docker** (Recommended):
    ```bash
-   # Install frontend dependencies
-   npm install
+   docker compose up -d --build
+   ```
 
-   # Install backend dependencies
+3. **Native development**:
+   ```bash
+   # Frontend
+   npm install
+   npm start
+   
+   # Backend (separate terminal)
    cd server
    npm install
+   npm run dev
    ```
 
-3. Start the development environment:
-   ```bash
-   docker-compose up -d --build
-   ```
+### 🧪 Testing & Quality
 
-4. Make your changes
-5. Test thoroughly
-6. Submit a pull request
+- **ESLint**: Code quality and consistency
+- **Prettier**: Automated code formatting
+- **Docker Health Checks**: Container monitoring
+- **API Testing**: Endpoint validation and error handling
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Feel free to submit issues to give me suggestions on how to improve the project. 
+We welcome contributions from the homelab community! Here's how to get involved:
 
-## License
+### 🐛 **Bug Reports**
+- Use GitHub Issues with detailed reproduction steps
+- Include environment details (Docker version, OS, browser)
+- Attach logs and screenshots when applicable
 
-This project is licensed under the [MIT License](LICENSE).
+### 💡 **Feature Requests**
+- Describe the use case and expected behavior
+- Consider backward compatibility
+- Propose implementation approach if possible
+
+### 🔧 **Pull Requests**
+1. Fork the repository and create a feature branch
+2. Follow existing code style and conventions
+3. Test thoroughly in different environments
+4. Update documentation and changelog
+5. Submit PR with clear description
+
+### 📋 **Development Guidelines**
+- Keep changes focused and atomic
+- Maintain backward compatibility when possible
+- Follow semantic versioning for releases
+- Write clear commit messages
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) - see the file for details.
+
+*Star ⭐ this repository if DitDashDot helps organize your homelab!*
