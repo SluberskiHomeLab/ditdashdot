@@ -1,2 +1,5 @@
 README.md
 CHANGELOG.md
+node_modules/
+build/
+package-lock.json

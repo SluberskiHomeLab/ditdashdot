@@ -48,8 +48,8 @@ app.put('/api/settings', async (req, res) => {
   try {
     const settings = req.body;
     await pool.query(
-      'UPDATE dashboard_config SET title = $1, tab_title = $2, favicon_url = $3, background_url = $4, mode = $5, show_details = $6, font_family = $7, font_size = $8, icon_size = $9',
-      [settings.title, settings.tab_title, settings.favicon_url, settings.background_url, settings.mode, settings.show_details, settings.font_family, settings.font_size, settings.icon_size]
+      'UPDATE dashboard_config SET title = $1, tab_title = $2, favicon_url = $3, background_url = $4, mode = $5, show_details = $6, font_family = $7, font_size = $8, icon_size = $9, alerts_enabled = $10, alerts_paused = $11, webhook_url = $12, alert_threshold_seconds = $13',
+      [settings.title, settings.tab_title, settings.favicon_url, settings.background_url, settings.mode, settings.show_details, settings.font_family, settings.font_size, settings.icon_size, settings.alerts_enabled || false, settings.alerts_paused || false, settings.webhook_url || null, settings.alert_threshold_seconds || 300]
     );
     res.json({ message: 'Settings updated successfully' });
   } catch (err) {
@@ -407,10 +407,14 @@ app.post('/api/ping', async (req, res) => {
     const { services } = req.body;
     const results = {};
     
+    // Get alert settings
+    const settingsResult = await pool.query('SELECT alerts_enabled, alerts_paused, webhook_url, alert_threshold_seconds FROM dashboard_config LIMIT 1');
+    const alertSettings = settingsResult.rows[0] || {};
+    
     // Use Promise.allSettled to ping all services concurrently
     const pingPromises = services.map(async (service) => {
       if (!service.ip || !service.port) {
-        return { key: `${service.id}`, status: null }; // No IP/port to ping
+        return { key: `${service.id}`, status: null, service }; // No IP/port to ping
       }
       
       const key = `${service.ip}:${service.port}`;
@@ -423,17 +427,17 @@ app.post('/api/ping', async (req, res) => {
         socket.setTimeout(timeout);
         socket.on('connect', () => {
           socket.destroy();
-          resolve({ key, status: true });
+          resolve({ key, status: true, service });
         });
         
         socket.on('timeout', () => {
           socket.destroy();
-          resolve({ key, status: false });
+          resolve({ key, status: false, service });
         });
         
         socket.on('error', () => {
           socket.destroy();
-          resolve({ key, status: false });
+          resolve({ key, status: false, service });
         });
         
         socket.connect(service.port, service.ip);
@@ -442,16 +446,238 @@ app.post('/api/ping', async (req, res) => {
     
     const pingResults = await Promise.allSettled(pingPromises);
     
-    pingResults.forEach((result) => {
+    // Process results and handle alerts
+    for (const result of pingResults) {
       if (result.status === 'fulfilled' && result.value.key) {
-        results[result.value.key] = result.value.status;
+        const { key, status, service } = result.value;
+        results[key] = status;
+        
+        // Handle alert tracking if alerts are enabled
+        if (alertSettings.alerts_enabled && service.id) {
+          await handleServiceStatusChange(service, status, alertSettings);
+        }
       }
-    });
+    }
     
     res.json(results);
   } catch (err) {
     console.error('Error in ping endpoint:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Helper function to handle service status changes and send alerts
+async function handleServiceStatusChange(service, currentStatus, alertSettings) {
+  try {
+    // Check the last known status from alert_history
+    const lastStatusQuery = await pool.query(
+      'SELECT * FROM alert_history WHERE service_id = $1 ORDER BY created_at DESC LIMIT 1',
+      [service.id]
+    );
+    
+    const lastStatus = lastStatusQuery.rows[0];
+    const now = new Date();
+    
+    if (currentStatus === false) {
+      // Service is down
+      if (!lastStatus || lastStatus.status !== 'down') {
+        // Service just went down, create new record
+        await pool.query(
+          'INSERT INTO alert_history (service_id, service_name, service_ip, service_port, status, down_since) VALUES ($1, $2, $3, $4, $5, $6)',
+          [service.id, service.name, service.ip, service.port, 'down', now]
+        );
+      } else {
+        // Service is still down, check if we need to send alert
+        const downSince = new Date(lastStatus.down_since);
+        const downDuration = (now - downSince) / 1000; // seconds
+        
+        if (!lastStatus.notification_sent && 
+            downDuration >= (alertSettings.alert_threshold_seconds || 300) &&
+            !alertSettings.alerts_paused &&
+            alertSettings.webhook_url) {
+          // Send webhook notification
+          await sendWebhookNotification(service, downDuration, alertSettings.webhook_url);
+          
+          // Mark notification as sent
+          await pool.query(
+            'UPDATE alert_history SET notification_sent = true WHERE id = $1',
+            [lastStatus.id]
+          );
+        }
+      }
+    } else if (currentStatus === true) {
+      // Service is up
+      if (lastStatus && lastStatus.status === 'down') {
+        // Service just came back up
+        await pool.query(
+          'UPDATE alert_history SET status = $1, up_since = $2 WHERE id = $3',
+          ['recovered', now, lastStatus.id]
+        );
+        
+        // Create new "up" record
+        await pool.query(
+          'INSERT INTO alert_history (service_id, service_name, service_ip, service_port, status) VALUES ($1, $2, $3, $4, $5)',
+          [service.id, service.name, service.ip, service.port, 'up']
+        );
+        
+        // Send recovery notification if previous notification was sent
+        if (lastStatus.notification_sent && !alertSettings.alerts_paused && alertSettings.webhook_url) {
+          await sendRecoveryNotification(service, alertSettings.webhook_url);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error handling service status change:', err);
+  }
+}
+
+// Helper function to send webhook notification
+async function sendWebhookNotification(service, downDuration, webhookUrl) {
+  try {
+    const https = require('https');
+    const http = require('http');
+    const url = require('url');
+    
+    const parsedUrl = url.parse(webhookUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+    
+    const payload = JSON.stringify({
+      type: 'service_down',
+      service_name: service.name,
+      service_ip: service.ip,
+      service_port: service.port,
+      service_url: service.url,
+      down_duration_seconds: Math.floor(downDuration),
+      timestamp: new Date().toISOString(),
+      message: `Service "${service.name}" (${service.ip}:${service.port}) has been down for ${Math.floor(downDuration)} seconds`
+    });
+    
+    const options = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port,
+      path: parsedUrl.path,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    
+    return new Promise((resolve, reject) => {
+      const req = protocol.request(options, (res) => {
+        console.log(`Webhook notification sent for ${service.name}, status code: ${res.statusCode}`);
+        resolve();
+      });
+      
+      req.on('error', (err) => {
+        console.error('Error sending webhook notification:', err);
+        reject(err);
+      });
+      
+      req.write(payload);
+      req.end();
+    });
+  } catch (err) {
+    console.error('Error in sendWebhookNotification:', err);
+  }
+}
+
+// Helper function to send recovery notification
+async function sendRecoveryNotification(service, webhookUrl) {
+  try {
+    const https = require('https');
+    const http = require('http');
+    const url = require('url');
+    
+    const parsedUrl = url.parse(webhookUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+    
+    const payload = JSON.stringify({
+      type: 'service_recovered',
+      service_name: service.name,
+      service_ip: service.ip,
+      service_port: service.port,
+      service_url: service.url,
+      timestamp: new Date().toISOString(),
+      message: `Service "${service.name}" (${service.ip}:${service.port}) has recovered and is now up`
+    });
+    
+    const options = {
+      hostname: parsedUrl.hostname,
+      port: parsedUrl.port,
+      path: parsedUrl.path,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    
+    return new Promise((resolve, reject) => {
+      const req = protocol.request(options, (res) => {
+        console.log(`Recovery notification sent for ${service.name}, status code: ${res.statusCode}`);
+        resolve();
+      });
+      
+      req.on('error', (err) => {
+        console.error('Error sending recovery notification:', err);
+        reject(err);
+      });
+      
+      req.write(payload);
+      req.end();
+    });
+  } catch (err) {
+    console.error('Error in sendRecoveryNotification:', err);
+  }
+}
+
+// Alert history routes
+app.get('/api/alerts/history', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const result = await pool.query(
+      'SELECT * FROM alert_history ORDER BY created_at DESC LIMIT $1',
+      [limit]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching alert history:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/alerts/history', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM alert_history');
+    res.json({ message: 'Alert history cleared successfully' });
+  } catch (err) {
+    console.error('Error clearing alert history:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/alerts/test', async (req, res) => {
+  try {
+    const { webhook_url } = req.body;
+    
+    if (!webhook_url) {
+      return res.status(400).json({ error: 'Webhook URL is required' });
+    }
+    
+    // Send test notification
+    const testService = {
+      name: 'Test Service',
+      ip: '192.168.1.1',
+      port: 80,
+      url: 'http://test.example.com'
+    };
+    
+    await sendWebhookNotification(testService, 300, webhook_url);
+    res.json({ message: 'Test notification sent successfully' });
+  } catch (err) {
+    console.error('Error sending test notification:', err);
+    res.status(500).json({ error: 'Failed to send test notification' });
   }
 });
 

@@ -55,6 +55,16 @@
 - **Health Monitoring**: Automated ping checks with customizable intervals
 - **Service Cards**: Rich information display with status indicators
 
+### 🔔 Alert & Notification System (Service Mode Only)
+- **Webhook Notifications**: Real-time alerts via HTTP/HTTPS webhooks
+- **Service Down Detection**: Automatic notifications when services go offline
+- **Customizable Thresholds**: Configure time-down thresholds before alerting (default: 5 minutes)
+- **Recovery Notifications**: Automatic alerts when services come back online
+- **Pause Alerts**: Temporarily disable notifications during maintenance
+- **Alert History**: Track service status changes and downtime events
+- **Test Notifications**: Verify webhook configuration with test messages
+- **Smart Alerting**: Only sends one notification per downtime event
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -102,6 +112,44 @@ The system automatically creates:
 3. **Configure Widgets**: Set up weather, time, and solar widgets in the Widgets tab
 4. **Customize Appearance**: Choose your theme and styling in General Settings
 5. **Create Pages**: Organize services across multiple pages as needed
+6. **Setup Alerts** (Optional): Configure webhook notifications in the Alerts tab
+
+### 🔔 Setting Up Alert Notifications
+
+DitDashDot can send real-time notifications when services go down or recover. This feature is only active when using the **Service Mode** theme.
+
+1. **Navigate to Configuration**: Visit `/config` and select the **Alerts** tab
+2. **Enable Alerts**: Toggle "Enable Alert Notifications"
+3. **Configure Webhook**: Enter your webhook URL (supports HTTP/HTTPS)
+   - Compatible with Discord, Slack, custom endpoints, or any webhook receiver
+4. **Set Threshold**: Configure how long a service should be down before alerting (default: 300 seconds)
+5. **Test Your Setup**: Use the "Send Test Notification" button to verify configuration
+6. **Apply to Database**: Run the migration script to enable alert functionality:
+   ```bash
+   cd migrations
+   chmod +x run_005_migration.sh
+   ./run_005_migration.sh
+   ```
+
+**Webhook Payload Format:**
+```json
+{
+  "type": "service_down",
+  "service_name": "Service Name",
+  "service_ip": "192.168.1.1",
+  "service_port": 80,
+  "service_url": "http://service.local",
+  "down_duration_seconds": 300,
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "message": "Service has been down for 300 seconds"
+}
+```
+
+**Features:**
+- Pause alerts during maintenance windows
+- View alert history to track service reliability
+- Automatic recovery notifications
+- Clear history to reset tracking
 
 ## ⚙️ Configuration
 

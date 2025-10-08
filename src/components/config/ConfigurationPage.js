@@ -56,7 +56,11 @@ const ConfigurationPage = () => {
     background_url: '',
     font_family: 'Arial, sans-serif',
     font_size: '14px',
-    icon_size: '32px'
+    icon_size: '32px',
+    alerts_enabled: false,
+    alerts_paused: false,
+    webhook_url: '',
+    alert_threshold_seconds: 300
   });
   const [pages, setPages] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -289,6 +293,7 @@ const ConfigurationPage = () => {
             <Tab label="Services" />
             <Tab label="Widgets" />
             <Tab label="Icons" />
+            <Tab label="Alerts" />
           </Tabs>
         </Box>
 
@@ -554,6 +559,156 @@ const ConfigurationPage = () => {
               </ListItem>
             ))}
           </List>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={6}>
+          <Typography variant="h6" gutterBottom>
+            Alert Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Configure notifications for service status changes. Alerts are only active when using Service Mode theme.
+          </Typography>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.alerts_enabled || false}
+                  onChange={handleSwitchChange}
+                  name="alerts_enabled"
+                />
+              }
+              label="Enable Alert Notifications"
+            />
+
+            {settings.alerts_enabled && (
+              <>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={settings.alerts_paused || false}
+                      onChange={handleSwitchChange}
+                      name="alerts_paused"
+                    />
+                  }
+                  label="Pause All Alerts"
+                />
+
+                <TextField
+                  label="Webhook URL"
+                  name="webhook_url"
+                  value={settings.webhook_url || ''}
+                  onChange={handleChange}
+                  fullWidth
+                  helperText="Enter the webhook URL to receive alert notifications (supports HTTP/HTTPS)"
+                  placeholder="https://your-webhook-endpoint.com/alerts"
+                />
+
+                <TextField
+                  label="Alert Threshold (seconds)"
+                  name="alert_threshold_seconds"
+                  type="number"
+                  value={settings.alert_threshold_seconds || 300}
+                  onChange={handleChange}
+                  fullWidth
+                  helperText="Time in seconds before sending an alert for a downed service (default: 300 seconds / 5 minutes)"
+                  inputProps={{ min: 60, step: 60 }}
+                />
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={async () => {
+                      try {
+                        await axios.post(`${API_URL}/alerts/test`, {
+                          webhook_url: settings.webhook_url
+                        });
+                        setAlert({
+                          open: true,
+                          message: 'Test notification sent successfully',
+                          severity: 'success'
+                        });
+                      } catch (error) {
+                        setAlert({
+                          open: true,
+                          message: 'Failed to send test notification',
+                          severity: 'error'
+                        });
+                      }
+                    }}
+                    disabled={!settings.webhook_url}
+                  >
+                    Send Test Notification
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    color="warning"
+                    onClick={async () => {
+                      if (window.confirm('Are you sure you want to clear all alert history?')) {
+                        try {
+                          await axios.delete(`${API_URL}/alerts/history`);
+                          setAlert({
+                            open: true,
+                            message: 'Alert history cleared successfully',
+                            severity: 'success'
+                          });
+                        } catch (error) {
+                          setAlert({
+                            open: true,
+                            message: 'Failed to clear alert history',
+                            severity: 'error'
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    Clear Alert History
+                  </Button>
+                </Box>
+
+                <Button
+                  type="button"
+                  variant="contained"
+                  onClick={handleSubmit}
+                >
+                  Save Alert Settings
+                </Button>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Typography variant="h6" gutterBottom>
+                  Webhook Payload Format
+                </Typography>
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
+                  <Typography variant="body2" component="pre" sx={{ fontFamily: 'monospace', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
+{`// Service Down Notification
+{
+  "type": "service_down",
+  "service_name": "Service Name",
+  "service_ip": "192.168.1.1",
+  "service_port": 80,
+  "service_url": "http://service.local",
+  "down_duration_seconds": 300,
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "message": "Service has been down for 300 seconds"
+}
+
+// Service Recovery Notification
+{
+  "type": "service_recovered",
+  "service_name": "Service Name",
+  "service_ip": "192.168.1.1",
+  "service_port": 80,
+  "service_url": "http://service.local",
+  "timestamp": "2024-01-01T12:05:00.000Z",
+  "message": "Service has recovered and is now up"
+}`}
+                  </Typography>
+                </Paper>
+              </>
+            )}
+          </Box>
         </TabPanel>
       </Paper>
 
