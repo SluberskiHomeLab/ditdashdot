@@ -1,3 +1,7 @@
+# DitDashDot has now been moved to forgejo.  This repository is archived on Github.  Any future development will be done at the below link  
+
+Forgejo Repo: https://git.sluberskihomelab.com/Public/ditdashdot
+
 <img width="1900" height="947" alt="Screenshot 2025-08-21 at 10-31-25 Homelab Dashboard" src="https://github.com/user-attachments/assets/5398a7e6-40f5-4a7a-a37c-a70897ab3df4" />
 
 # DitDashDot
